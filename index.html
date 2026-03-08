@@ -3,637 +3,1120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wagner Quest - Currículo RPG</title>
+  <title>Wagner Quest — JRPG Currículo</title>
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    :root{
+      --bg:#0f1020;
+      --panel:#1a1d35;
+      --panel-2:#262a4d;
+      --panel-3:#0b0d1a;
+      --line:#7dd3fc;
+      --line-2:#facc15;
+      --text:#f8fafc;
+      --muted:#cbd5e1;
+      --grass:#2f8f46;
+      --grass-2:#26773a;
+      --stone:#8b8fa8;
+      --stone-2:#6d7289;
+      --water:#2b74d8;
+      --water-2:#1d57a8;
+      --sand:#c9a65c;
+      --tree:#205b2e;
+      --roof:#8f2f2f;
+      --wall:#e2d0ad;
+      --wood:#7b4d24;
+      --shadow:0 8px 0 rgba(0,0,0,.18), 0 18px 30px rgba(0,0,0,.35);
     }
 
-    :root {
-      --bg: #0f172a;
-      --panel: rgba(15, 23, 42, 0.92);
-      --panel-2: rgba(30, 41, 59, 0.95);
-      --text: #e2e8f0;
-      --accent: #38bdf8;
-      --accent-2: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --tile-grass: #1e7a43;
-      --tile-path: #a16207;
-      --tile-water: #2563eb;
-      --tile-stone: #475569;
-      --shadow: 0 10px 25px rgba(0,0,0,0.35);
-    }
-
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
-      color: var(--text);
-      min-height: 100vh;
-      overflow: hidden;
-    }
-
-    .screen {
-      display: none;
-      width: 100%;
-      height: 100vh;
-    }
-
-    .screen.active {
-      display: flex;
-    }
-
-    /* Tela inicial */
-    #startScreen {
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+      font-family: "Courier New", monospace;
       background:
-        radial-gradient(circle at top, rgba(56,189,248,.15), transparent 35%),
-        radial-gradient(circle at bottom, rgba(34,197,94,.12), transparent 35%),
-        linear-gradient(180deg, #020617, #0f172a);
+        radial-gradient(circle at top, rgba(125,211,252,.08), transparent 30%),
+        linear-gradient(180deg, #080912, #12152a 50%, #0a0c17);
+      color:var(--text);
+      overflow:hidden;
+      image-rendering: pixelated;
     }
 
-    .start-card {
-      width: min(900px, 100%);
-      background: var(--panel);
-      border: 2px solid rgba(56,189,248,.35);
-      border-radius: 24px;
-      box-shadow: var(--shadow);
-      padding: 32px;
-      text-align: center;
+    .screen{
+      display:none;
+      width:100%;
+      height:100vh;
+    }
+    .screen.active{display:flex}
+
+    /* ========== START SCREEN ========== */
+    #startScreen{
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      position:relative;
+      overflow:hidden;
     }
 
-    .start-card h1 {
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      margin-bottom: 12px;
-      color: #f8fafc;
+    .stars, .stars::before, .stars::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,.5) 1px, transparent 1px),
+        radial-gradient(circle, rgba(255,255,255,.7) 1px, transparent 1px);
+      background-size: 120px 120px, 180px 180px, 240px 240px;
+      background-position: 0 0, 30px 60px, 90px 20px;
+      opacity:.35;
+      animation: twinkle 8s linear infinite;
+      pointer-events:none;
+    }
+    .stars::before{animation-duration:12s;opacity:.18}
+    .stars::after{animation-duration:16s;opacity:.12}
+    @keyframes twinkle{
+      from{transform:translateY(0)}
+      to{transform:translateY(16px)}
     }
 
-    .start-card h2 {
-      font-size: clamp(1rem, 2vw, 1.35rem);
-      color: #94a3b8;
-      margin-bottom: 20px;
-      font-weight: 400;
+    .start-card{
+      position:relative;
+      width:min(980px,100%);
+      background:linear-gradient(180deg,var(--panel),#101327);
+      border:4px solid #cbd5e1;
+      box-shadow:var(--shadow);
+      padding:26px;
+      z-index:2;
     }
 
-    .start-card p {
-      max-width: 720px;
-      margin: 0 auto 24px;
-      line-height: 1.7;
-      color: #cbd5e1;
+    .pixel-frame{
+      border:4px solid #0b1020;
+      outline:4px solid #cbd5e1;
+      box-shadow:inset 0 0 0 4px #374151;
     }
 
-    .btn-row {
-      display: flex;
-      gap: 14px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    button {
-      border: none;
-      cursor: pointer;
-      border-radius: 12px;
-      padding: 14px 22px;
-      font-size: 1rem;
-      font-weight: 700;
-      transition: 0.2s ease;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), #0ea5e9);
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #1e293b;
-      color: white;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.05);
-    }
-
-    .mini-note {
-      margin-top: 18px;
-      font-size: 0.95rem;
-      color: #94a3b8;
-    }
-
-    /* Jogo */
-    #gameScreen {
-      position: relative;
-      flex-direction: column;
-    }
-
-    .topbar {
-      width: 100%;
-      padding: 12px 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      background: rgba(2, 6, 23, 0.8);
-      border-bottom: 1px solid rgba(255,255,255,.08);
-      z-index: 5;
-    }
-
-    .topbar .title {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .topbar .hint {
-      font-size: 0.92rem;
-      color: #94a3b8;
-      text-align: right;
-    }
-
-    .game-wrapper {
-      position: relative;
-      width: 100%;
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-    }
-
-    .map-frame {
-      position: relative;
-      width: min(1000px, 100%);
-      aspect-ratio: 16 / 9;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 2px solid rgba(255,255,255,.08);
-      box-shadow: var(--shadow);
-      background: #0b1220;
-    }
-
-    #map {
-      position: relative;
-      width: 100%;
-      height: 100%;
+    .logo{
+      padding:24px 16px;
+      text-align:center;
       background:
-        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-        linear-gradient(180deg, #14532d 0%, #166534 100%);
-      background-size: 48px 48px, 48px 48px, cover;
+        linear-gradient(180deg, rgba(125,211,252,.12), rgba(250,204,21,.08)),
+        #101428;
+      margin-bottom:18px;
     }
 
-    .zone {
-      position: absolute;
-      border-radius: 16px;
-      border: 2px solid rgba(255,255,255,0.12);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 10px;
-      font-weight: 700;
-      line-height: 1.3;
-      color: #fff;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+    .logo h1{
+      font-size:clamp(2rem,4vw,4rem);
+      letter-spacing:2px;
+      color:#fff;
+      text-shadow:
+        3px 3px 0 #1e3a8a,
+        6px 6px 0 #0f172a;
+      margin-bottom:10px;
     }
 
-    .zone small {
-      display: block;
-      font-weight: 400;
-      opacity: 0.95;
-      margin-top: 4px;
-      font-size: 0.78rem;
+    .logo p{
+      color:#dbeafe;
+      font-size:1rem;
+      line-height:1.7;
+      max-width:780px;
+      margin:0 auto;
     }
 
-    .zone.about { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
-    .zone.exp { background: linear-gradient(135deg, #22c55e, #15803d); }
-    .zone.skills { background: linear-gradient(135deg, #f59e0b, #b45309); }
-    .zone.projects { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
-    .zone.education { background: linear-gradient(135deg, #ef4444, #b91c1c); }
-    .zone.contact { background: linear-gradient(135deg, #14b8a6, #0f766e); }
-
-    .player {
-      position: absolute;
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: linear-gradient(180deg, #f8fafc, #cbd5e1);
-      border: 3px solid #0f172a;
-      box-shadow: 0 6px 10px rgba(0,0,0,.25);
-      z-index: 3;
-      transition: transform 0.05s linear;
+    .press-start{
+      margin-top:18px;
+      font-size:1.1rem;
+      color:#fde68a;
+      animation:blink 1s steps(1) infinite;
+    }
+    @keyframes blink{
+      0%,49%{opacity:1}
+      50%,100%{opacity:.2}
     }
 
-    .player::before {
-      content: "";
-      position: absolute;
-      width: 18px;
-      height: 18px;
-      background: #0f172a;
-      border-radius: 50%;
-      top: 4px;
-      left: 50%;
-      transform: translateX(-50%);
+    .start-actions{
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+      margin-top:20px;
     }
 
-    .player::after {
-      content: "";
-      position: absolute;
-      width: 22px;
-      height: 10px;
-      background: #38bdf8;
-      border-radius: 6px;
-      bottom: 6px;
-      left: 50%;
-      transform: translateX(-50%);
+    .btn{
+      font-family:inherit;
+      font-size:1rem;
+      font-weight:bold;
+      color:#fff;
+      background:linear-gradient(180deg,#334155,#1e293b);
+      border:3px solid #e5e7eb;
+      padding:12px 20px;
+      cursor:pointer;
+      min-width:200px;
+      box-shadow:0 5px 0 #0f172a;
+      transition:transform .08s ease;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn.primary{
+      background:linear-gradient(180deg,#2563eb,#1d4ed8);
+    }
+    .btn.gold{
+      background:linear-gradient(180deg,#d97706,#b45309);
     }
 
-    .hud {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 4;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 12px 14px;
-      min-width: 220px;
-      backdrop-filter: blur(6px);
+    .small-note{
+      margin-top:18px;
+      text-align:center;
+      color:#cbd5e1;
+      line-height:1.6;
+      font-size:.95rem;
     }
 
-    .hud h3 {
-      font-size: 1rem;
-      margin-bottom: 6px;
-      color: #f8fafc;
+    /* ========== GAME SCREEN ========== */
+    #gameScreen{
+      flex-direction:column;
+      padding:12px;
+      gap:12px;
     }
 
-    .hud p {
-      font-size: 0.9rem;
-      color: #cbd5e1;
-      line-height: 1.45;
+    .top-ui{
+      display:flex;
+      gap:12px;
+      align-items:stretch;
+      min-height:92px;
     }
 
-    .dialog {
-      position: absolute;
-      left: 50%;
-      bottom: 20px;
-      transform: translateX(-50%);
-      width: min(900px, calc(100% - 24px));
-      background: var(--panel);
-      border: 1px solid rgba(56,189,248,.25);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      padding: 18px;
-      z-index: 10;
-      display: none;
+    .status-bar,
+    .quest-bar,
+    .help-bar{
+      background:linear-gradient(180deg,var(--panel),#111426);
+      border:3px solid #dbeafe;
+      box-shadow:var(--shadow);
+      padding:10px 12px;
     }
 
-    .dialog.active {
-      display: block;
+    .status-bar{
+      flex:1.2;
+      min-width:280px;
     }
 
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
+    .quest-bar{
+      flex:1.3;
     }
 
-    .dialog-header h3 {
-      font-size: 1.2rem;
-      color: white;
+    .help-bar{
+      flex:.9;
+      min-width:240px;
     }
 
-    .dialog-content {
-      max-height: 260px;
-      overflow: auto;
-      padding-right: 6px;
-      line-height: 1.65;
-      color: #e2e8f0;
+    .panel-title{
+      color:#fde68a;
+      font-size:.95rem;
+      margin-bottom:6px;
+      text-transform:uppercase;
     }
 
-    .dialog-content p {
-      margin-bottom: 10px;
+    .status-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:4px 10px;
+      font-size:.95rem;
+      line-height:1.4;
     }
 
-    .dialog-content ul {
-      padding-left: 18px;
-      margin-bottom: 10px;
+    .quest-text,.help-text{
+      color:#dbeafe;
+      line-height:1.45;
+      font-size:.92rem;
     }
 
-    .dialog-content li {
-      margin-bottom: 6px;
+    .game-layout{
+      flex:1;
+      display:grid;
+      grid-template-columns: 1fr 340px;
+      gap:12px;
+      min-height:0;
     }
 
-    .close-btn {
-      background: #1e293b;
-      color: white;
-      padding: 8px 12px;
-      font-size: 0.9rem;
-      border-radius: 10px;
+    .world-shell{
+      position:relative;
+      min-height:0;
+      background:linear-gradient(180deg,#0d1122,#101427);
+      border:4px solid #e2e8f0;
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
 
-    .mobile-controls {
-      position: absolute;
-      right: 16px;
-      bottom: 110px;
-      z-index: 4;
-      display: none;
-      grid-template-columns: 60px 60px 60px;
-      gap: 8px;
+    .world{
+      position:relative;
+      width:100%;
+      height:100%;
+      background:
+        linear-gradient(rgba(255,255,255,.03) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255,255,255,.03) 2px, transparent 2px),
+        linear-gradient(180deg,#4da95d,#2f8f46);
+      background-size:48px 48px,48px 48px,cover;
     }
 
-    .mobile-controls button {
-      width: 60px;
-      height: 60px;
-      border-radius: 14px;
-      background: rgba(15, 23, 42, 0.9);
-      color: white;
-      font-size: 1.2rem;
-      border: 1px solid rgba(255,255,255,.08);
+    .location-tag{
+      position:absolute;
+      left:10px;
+      top:10px;
+      z-index:10;
+      background:#0f172a;
+      border:3px solid #e5e7eb;
+      padding:8px 10px;
+      color:#fde68a;
+      box-shadow:0 5px 0 #00000033;
+      font-size:.95rem;
     }
 
-    .legend {
-      position: absolute;
-      right: 16px;
-      top: 16px;
-      z-index: 4;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      padding: 12px 14px;
-      max-width: 240px;
+    .location-sub{
+      color:#dbeafe;
+      font-size:.82rem;
+      margin-top:2px;
     }
 
-    .legend h4 {
-      margin-bottom: 8px;
-      color: #f8fafc;
+    /* Tiles / scenery */
+    .water{
+      position:absolute;
+      background:
+        linear-gradient(180deg,var(--water),var(--water-2));
+      border:2px solid rgba(255,255,255,.15);
+      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05);
     }
 
-    .legend p {
-      font-size: 0.9rem;
-      color: #cbd5e1;
-      line-height: 1.5;
+    .bridge{
+      position:absolute;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          #8b5a2b 0 14px,
+          #6b4421 14px 18px
+        );
+      border:2px solid #5b3719;
     }
 
-    @media (max-width: 900px) {
-      .legend {
-        display: none;
+    .path{
+      position:absolute;
+      background:
+        repeating-linear-gradient(
+          45deg,
+          #c9a65c 0 18px,
+          #b6924e 18px 36px
+        );
+      border:2px solid rgba(0,0,0,.1);
+    }
+
+    .tree{
+      position:absolute;
+      width:54px;
+      height:62px;
+    }
+    .tree::before{
+      content:"";
+      position:absolute;
+      width:48px;
+      height:48px;
+      left:3px;
+      top:0;
+      background:radial-gradient(circle at 30% 30%, #3e9d51, var(--tree));
+      border:3px solid rgba(0,0,0,.15);
+      border-radius:8px;
+      box-shadow: inset -6px -8px 0 rgba(0,0,0,.12);
+    }
+    .tree::after{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:18px;
+      left:20px;
+      bottom:0;
+      background:#6b4421;
+      border:2px solid rgba(0,0,0,.12);
+    }
+
+    .building{
+      position:absolute;
+      border:3px solid rgba(0,0,0,.18);
+      box-shadow: inset 0 -10px 0 rgba(0,0,0,.08);
+    }
+    .building .roof{
+      position:absolute;
+      left:-4px;
+      top:-18px;
+      width:calc(100% + 8px);
+      height:22px;
+      background:linear-gradient(180deg,#b14141,var(--roof));
+      border:3px solid rgba(0,0,0,.18);
+    }
+    .building .label{
+      position:absolute;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      text-align:center;
+      color:#0f172a;
+      font-weight:bold;
+      font-size:.9rem;
+      width:90%;
+      line-height:1.25;
+    }
+
+    .building.about{background:var(--wall)}
+    .building.experience{background:#d4f1dd}
+    .building.skills{background:#fde7a8}
+    .building.projects{background:#ddd6fe}
+    .building.education{background:#fecaca}
+    .building.contact{background:#a7f3d0}
+
+    .player{
+      position:absolute;
+      width:34px;
+      height:42px;
+      z-index:50;
+      transition:transform .06s linear;
+    }
+    .player .head{
+      position:absolute;
+      width:18px;
+      height:18px;
+      left:8px;
+      top:0;
+      background:#f4c99b;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:4px;
+    }
+    .player .hair{
+      position:absolute;
+      width:20px;
+      height:10px;
+      left:7px;
+      top:-1px;
+      background:#2f1a10;
+      border-radius:4px 4px 2px 2px;
+    }
+    .player .body{
+      position:absolute;
+      width:26px;
+      height:18px;
+      left:4px;
+      top:16px;
+      background:#2563eb;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:3px;
+    }
+    .player .legs{
+      position:absolute;
+      width:22px;
+      height:10px;
+      left:6px;
+      top:32px;
+      background:#334155;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:2px;
+    }
+
+    .npc{
+      position:absolute;
+      width:34px;
+      height:42px;
+      z-index:40;
+      cursor:pointer;
+      filter: drop-shadow(0 4px 0 rgba(0,0,0,.15));
+    }
+    .npc .head{
+      position:absolute;
+      width:18px;
+      height:18px;
+      left:8px;
+      top:0;
+      background:#f4c99b;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:4px;
+    }
+    .npc .body{
+      position:absolute;
+      width:26px;
+      height:18px;
+      left:4px;
+      top:16px;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:3px;
+    }
+    .npc .legs{
+      position:absolute;
+      width:22px;
+      height:10px;
+      left:6px;
+      top:32px;
+      background:#334155;
+      border:3px solid rgba(0,0,0,.18);
+      border-radius:2px;
+    }
+    .npc.blue .body{background:#0ea5e9}
+    .npc.green .body{background:#22c55e}
+    .npc.gold .body{background:#d97706}
+    .npc.purple .body{background:#7c3aed}
+    .npc.red .body{background:#dc2626}
+    .npc.teal .body{background:#0f766e}
+
+    .npc-name{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      bottom:46px;
+      white-space:nowrap;
+      background:#111827;
+      color:#fde68a;
+      border:2px solid #e5e7eb;
+      padding:2px 6px;
+      font-size:.75rem;
+      display:none;
+    }
+    .npc:hover .npc-name{display:block}
+
+    .sidebar{
+      min-height:0;
+      display:grid;
+      grid-template-rows: 1fr 1fr;
+      gap:12px;
+    }
+
+    .side-panel{
+      min-height:0;
+      background:linear-gradient(180deg,var(--panel),#111426);
+      border:3px solid #dbeafe;
+      box-shadow:var(--shadow);
+      padding:12px;
+      overflow:auto;
+    }
+
+    .menu-list{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+    }
+
+    .menu-btn{
+      width:100%;
+      font-family:inherit;
+      text-align:left;
+      padding:10px 12px;
+      color:#fff;
+      background:linear-gradient(180deg,#334155,#1f2937);
+      border:2px solid #e2e8f0;
+      cursor:pointer;
+      font-size:.95rem;
+      box-shadow:0 4px 0 #00000033;
+    }
+
+    .menu-btn:hover{
+      background:linear-gradient(180deg,#475569,#334155);
+    }
+
+    .relics, .attributes, .quests{
+      display:grid;
+      gap:8px;
+      margin-top:8px;
+      color:#e2e8f0;
+      font-size:.92rem;
+    }
+
+    .badge{
+      display:inline-block;
+      background:#0f172a;
+      color:#fde68a;
+      border:2px solid #e5e7eb;
+      padding:2px 8px;
+      margin-bottom:4px;
+      font-size:.82rem;
+    }
+
+    .quest-item{
+      border:2px solid rgba(255,255,255,.15);
+      padding:8px;
+      background:rgba(255,255,255,.03);
+      line-height:1.45;
+    }
+
+    /* Dialog */
+    .dialog-overlay{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.45);
+      display:none;
+      align-items:flex-end;
+      justify-content:center;
+      padding:20px;
+      z-index:200;
+    }
+    .dialog-overlay.active{display:flex}
+
+    .dialog-box{
+      width:min(1100px,100%);
+      background:linear-gradient(180deg,#1a1f3d,#0f1328);
+      border:4px solid #e2e8f0;
+      box-shadow:var(--shadow);
+      padding:16px;
+      display:grid;
+      grid-template-columns: 190px 1fr;
+      gap:16px;
+    }
+
+    .portrait{
+      min-height:180px;
+      background:
+        linear-gradient(180deg, rgba(125,211,252,.1), rgba(250,204,21,.05)),
+        #151933;
+      border:3px solid #cbd5e1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:14px;
+    }
+
+    .portrait .big-sprite{
+      position:relative;
+      width:72px;
+      height:94px;
+      margin-bottom:12px;
+    }
+    .portrait .big-sprite .head{
+      position:absolute;width:40px;height:40px;left:16px;top:0;background:#f4c99b;border:4px solid rgba(0,0,0,.18)
+    }
+    .portrait .big-sprite .hair{
+      position:absolute;width:44px;height:18px;left:14px;top:-2px;background:#2f1a10
+    }
+    .portrait .big-sprite .body{
+      position:absolute;width:56px;height:30px;left:8px;top:36px;border:4px solid rgba(0,0,0,.18)
+    }
+    .portrait .big-sprite .legs{
+      position:absolute;width:48px;height:20px;left:12px;top:68px;background:#334155;border:4px solid rgba(0,0,0,.18)
+    }
+
+    .portrait .name{
+      font-weight:bold;
+      color:#fde68a;
+      margin-bottom:6px;
+    }
+
+    .portrait .role{
+      color:#dbeafe;
+      font-size:.9rem;
+      line-height:1.45;
+    }
+
+    .dialog-content{
+      display:flex;
+      flex-direction:column;
+      min-height:220px;
+    }
+
+    .dialog-title{
+      color:#fde68a;
+      font-size:1.1rem;
+      margin-bottom:10px;
+    }
+
+    .dialog-text{
+      color:#eef2ff;
+      line-height:1.72;
+      font-size:1rem;
+      overflow:auto;
+      padding-right:6px;
+    }
+
+    .dialog-text p{margin-bottom:12px}
+    .dialog-text ul{padding-left:20px;margin-bottom:12px}
+    .dialog-text li{margin-bottom:8px}
+
+    .dialog-actions{
+      margin-top:12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .footnote{
+      margin-top:10px;
+      color:#cbd5e1;
+      font-size:.88rem;
+      line-height:1.5;
+    }
+
+    .controls-mobile{
+      display:none;
+      position:absolute;
+      right:12px;
+      bottom:12px;
+      z-index:120;
+      grid-template-columns: 62px 62px 62px;
+      gap:8px;
+    }
+
+    .controls-mobile button{
+      width:62px;height:62px;
+      font-family:inherit;
+      font-size:1.2rem;
+      color:#fff;
+      background:#0f172a;
+      border:3px solid #e5e7eb;
+      box-shadow:0 4px 0 #00000033;
+      cursor:pointer;
+    }
+
+    .hint-bubble{
+      position:absolute;
+      left:50%;
+      bottom:20px;
+      transform:translateX(-50%);
+      z-index:110;
+      background:#111827;
+      border:3px solid #e5e7eb;
+      padding:8px 12px;
+      color:#fde68a;
+      display:none;
+      box-shadow:0 4px 0 #00000033;
+      text-align:center;
+    }
+    .hint-bubble.active{display:block}
+
+    @media (max-width: 1100px){
+      .game-layout{
+        grid-template-columns:1fr;
       }
-
-      .mobile-controls {
-        display: grid;
+      .sidebar{
+        grid-template-columns:1fr 1fr;
+        grid-template-rows:none;
       }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .topbar .hint {
-        text-align: left;
-      }
-
-      .dialog-content {
-        max-height: 220px;
-      }
+      .world-shell{min-height:480px}
     }
 
-    @media (max-width: 600px) {
-      .start-card {
-        padding: 24px 18px;
+    @media (max-width: 860px){
+      #gameScreen{
+        padding:8px;
       }
-
-      .hud {
-        min-width: auto;
-        width: calc(100% - 32px);
+      .top-ui{
+        display:grid;
+        grid-template-columns:1fr;
       }
+      .sidebar{
+        grid-template-columns:1fr;
+      }
+      .dialog-box{
+        grid-template-columns:1fr;
+      }
+      .controls-mobile{display:grid}
+      .world-shell{min-height:420px}
+      .help-bar{display:none}
+    }
 
-      .mobile-controls {
-        right: 12px;
-        bottom: 120px;
+    @media (max-width: 540px){
+      .start-card{padding:16px}
+      .logo{padding:18px 12px}
+      .world-shell{min-height:390px}
+      .status-grid{
+        grid-template-columns:1fr;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Tela inicial -->
+  <!-- START -->
   <section id="startScreen" class="screen active">
-    <div class="start-card">
-      <h1>Wagner Quest</h1>
-      <h2>Currículo Interativo em estilo RPG</h2>
-      <p>
-        Explore o mapa, converse com os pontos de interesse e descubra a jornada profissional
-        de <strong>Wagner Douglas Ramos da Silva</strong> como se estivesse em um mini RPG.
-        Cada área representa uma parte do currículo: experiência, habilidades, projetos, formação e contato.
-      </p>
+    <div class="stars"></div>
 
-      <div class="btn-row">
-        <button class="btn-primary" onclick="startGame()">Iniciar Jornada</button>
-        <button class="btn-secondary" onclick="showIntro()">Sobre o Projeto</button>
+    <div class="start-card pixel-frame">
+      <div class="logo pixel-frame">
+        <h1>WAGNER QUEST</h1>
+        <p>
+          Um currículo interativo em estilo <strong>JRPG retrô</strong>, inspirado na atmosfera
+          dos clássicos antigos. Explore o reino profissional de <strong>Wagner Douglas Ramos da Silva</strong>,
+          converse com NPCs, visite construções temáticas e descubra experiência, habilidades, projetos,
+          formação e contato.
+        </p>
+        <div class="press-start">PRESS START</div>
       </div>
 
-      <p class="mini-note">
-        Dica: no computador use <strong>WASD</strong> ou <strong>setas</strong>. No celular, use os botões na tela.
-      </p>
+      <div class="start-actions">
+        <button class="btn primary" onclick="startGame()">Novo Jogo</button>
+        <button class="btn gold" onclick="openManual()">Como Jogar</button>
+        <button class="btn" onclick="openDirectProfile()">Ver Resumo Direto</button>
+      </div>
+
+      <div class="small-note">
+        Desktop: <strong>WASD</strong> ou <strong>setas</strong> para andar, <strong>E</strong> ou <strong>Enter</strong> para interagir.<br>
+        Mobile: use os botões na tela. Tudo está em um único HTML para facilitar o teste e o GitHub Pages.
+      </div>
     </div>
   </section>
 
-  <!-- Tela do jogo -->
+  <!-- GAME -->
   <section id="gameScreen" class="screen">
-    <div class="topbar">
-      <div class="title">🎮 Wagner Quest — Explore o mapa profissional</div>
-      <div class="hint">
-        Mova-se até uma área colorida para abrir uma seção do currículo
+    <div class="top-ui">
+      <div class="status-bar">
+        <div class="panel-title">Status do Herói</div>
+        <div class="status-grid">
+          <div><strong>Nome:</strong> Wagner Douglas Ramos da Silva</div>
+          <div><strong>Classe:</strong> Project Strategist</div>
+          <div><strong>Nível:</strong> PMO + Dados + Processos</div>
+          <div><strong>Especialização:</strong> Automação e Reporting</div>
+          <div><strong>Relics:</strong> Power BI, Excel, Python</div>
+          <div><strong>Missão:</strong> Transformar dados em decisão</div>
+        </div>
+      </div>
+
+      <div class="quest-bar">
+        <div class="panel-title">Quest Principal</div>
+        <div class="quest-text">
+          Explore o mapa e descubra a jornada profissional do candidato. Cada área representa uma parte do currículo:
+          <strong>Resumo, Experiência, Skills, Projetos, Formação e Contato</strong>.
+        </div>
+      </div>
+
+      <div class="help-bar">
+        <div class="panel-title">Comandos</div>
+        <div class="help-text">
+          <strong>Movimento:</strong> WASD / Setas<br>
+          <strong>Interagir:</strong> E / Enter<br>
+          <strong>Fechar diálogo:</strong> Esc<br>
+          <strong>Menu lateral:</strong> acesso direto às seções
+        </div>
       </div>
     </div>
 
-    <div class="game-wrapper">
-      <div class="map-frame">
-        <div id="map">
-          <div class="hud">
-            <h3>Personagem</h3>
-            <p>
-              <strong>Classe:</strong> Estrategista de Projetos<br>
-              <strong>Especialidade:</strong> PMO, Dados, Processos e Automação
-            </p>
+    <div class="game-layout">
+      <div class="world-shell">
+        <div class="location-tag">
+          Reino dos Projetos
+          <div class="location-sub">Currículo JRPG Interativo</div>
+        </div>
+
+        <div id="world" class="world">
+          <!-- scenery -->
+          <div class="water" style="left:0; top:0; width:14%; height:100%;"></div>
+          <div class="water" style="right:0; top:0; width:12%; height:100%;"></div>
+          <div class="bridge" style="left:12%; top:42%; width:6%; height:10%;"></div>
+          <div class="bridge" style="right:11%; top:60%; width:6%; height:10%;"></div>
+
+          <div class="path" style="left:15%; top:46%; width:70%; height:8%;"></div>
+          <div class="path" style="left:47%; top:15%; width:7%; height:70%;"></div>
+
+          <!-- trees -->
+          <div class="tree" style="left:18%; top:14%"></div>
+          <div class="tree" style="left:25%; top:10%"></div>
+          <div class="tree" style="left:81%; top:18%"></div>
+          <div class="tree" style="left:72%; top:9%"></div>
+          <div class="tree" style="left:22%; top:72%"></div>
+          <div class="tree" style="left:30%; top:79%"></div>
+          <div class="tree" style="left:75%; top:76%"></div>
+          <div class="tree" style="left:66%; top:80%"></div>
+
+          <!-- buildings -->
+          <div class="building about" data-zone="about" style="left:20%; top:22%; width:14%; height:14%;">
+            <div class="roof"></div>
+            <div class="label">Vila Inicial<br>Resumo</div>
           </div>
 
-          <div class="legend">
-            <h4>Missão principal</h4>
-            <p>
-              Descobrir a trajetória profissional do candidato explorando as regiões do mapa.
-            </p>
+          <div class="building experience" data-zone="experience" style="left:58%; top:21%; width:16%; height:16%;">
+            <div class="roof"></div>
+            <div class="label">Guilda dos<br>Projetos</div>
           </div>
 
-          <!-- Áreas -->
-          <div class="zone about" data-key="about" style="left: 7%; top: 15%; width: 18%; height: 18%;">
-            Vila Inicial
-            <small>Resumo profissional</small>
+          <div class="building skills" data-zone="skills" style="left:74%; top:45%; width:12%; height:14%;">
+            <div class="roof"></div>
+            <div class="label">Torre das<br>Skills</div>
           </div>
 
-          <div class="zone exp" data-key="experience" style="left: 38%; top: 10%; width: 24%; height: 20%;">
-            Guilda dos Projetos
-            <small>Experiência</small>
+          <div class="building projects" data-zone="projects" style="left:21%; top:59%; width:14%; height:15%;">
+            <div class="roof"></div>
+            <div class="label">Quadro de<br>Missões</div>
           </div>
 
-          <div class="zone skills" data-key="skills" style="left: 70%; top: 16%; width: 20%; height: 18%;">
-            Torre das Skills
-            <small>Competências</small>
+          <div class="building education" data-zone="education" style="left:58%; top:62%; width:16%; height:15%;">
+            <div class="roof"></div>
+            <div class="label">Arquivo<br>Real</div>
           </div>
 
-          <div class="zone projects" data-key="projects" style="left: 12%; top: 58%; width: 22%; height: 20%;">
-            Quadro de Missões
-            <small>Projetos e entregas</small>
+          <div class="building contact" data-zone="contact" style="left:40%; top:73%; width:14%; height:12%;">
+            <div class="roof"></div>
+            <div class="label">Portal Final<br>Contato</div>
           </div>
 
-          <div class="zone education" data-key="education" style="left: 42%; top: 58%; width: 22%; height: 20%;">
-            Arquivo Real
-            <small>Formação</small>
+          <!-- NPCs -->
+          <div class="npc blue" data-key="about" style="left:26%; top:39%">
+            <div class="npc-name">Ancião da Jornada</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
           </div>
 
-          <div class="zone contact" data-key="contact" style="left: 72%; top: 58%; width: 18%; height: 20%;">
-            Portal Final
-            <small>Contato</small>
+          <div class="npc green" data-key="experience" style="left:61%; top:41%">
+            <div class="npc-name">Mestre do PMO</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
           </div>
 
-          <!-- Jogador -->
-          <div id="player" class="player"></div>
+          <div class="npc gold" data-key="skills" style="left:76%; top:61%">
+            <div class="npc-name">Guardião das Skills</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
 
-          <!-- Controles mobile -->
-          <div class="mobile-controls">
+          <div class="npc purple" data-key="projects" style="left:30%; top:77%">
+            <div class="npc-name">Escriba das Missões</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
+
+          <div class="npc red" data-key="education" style="left:62%; top:79%">
+            <div class="npc-name">Bibliotecário Real</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
+
+          <div class="npc teal" data-key="contact" style="left:45%; top:63%">
+            <div class="npc-name">Guardião do Portal</div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
+
+          <!-- player -->
+          <div id="player" class="player">
+            <div class="hair"></div>
+            <div class="head"></div>
+            <div class="body"></div>
+            <div class="legs"></div>
+          </div>
+
+          <div id="hintBubble" class="hint-bubble">Pressione E para interagir</div>
+
+          <!-- mobile controls -->
+          <div class="controls-mobile">
             <div></div>
             <button onclick="movePlayer('up')">▲</button>
             <div></div>
-
             <button onclick="movePlayer('left')">◀</button>
             <button onclick="interact()">●</button>
             <button onclick="movePlayer('right')">▶</button>
-
             <div></div>
             <button onclick="movePlayer('down')">▼</button>
             <div></div>
           </div>
+        </div>
+      </div>
 
-          <!-- Diálogo -->
-          <div id="dialog" class="dialog">
-            <div class="dialog-header">
-              <h3 id="dialogTitle">Título</h3>
-              <button class="close-btn" onclick="closeDialog()">Fechar</button>
-            </div>
-            <div id="dialogContent" class="dialog-content"></div>
+      <aside class="sidebar">
+        <div class="side-panel">
+          <div class="panel-title">Menu do Reino</div>
+          <div class="menu-list">
+            <button class="menu-btn" onclick="openSection('about')">Resumo Profissional</button>
+            <button class="menu-btn" onclick="openSection('experience')">Experiência</button>
+            <button class="menu-btn" onclick="openSection('skills')">Habilidades</button>
+            <button class="menu-btn" onclick="openSection('projects')">Projetos e Entregas</button>
+            <button class="menu-btn" onclick="openSection('education')">Formação</button>
+            <button class="menu-btn" onclick="openSection('contact')">Contato</button>
+            <button class="menu-btn" onclick="openDirectProfile()">Resumo Executivo</button>
+            <button class="menu-btn" onclick="backToTitle()">Voltar ao Título</button>
           </div>
+
+          <div class="panel-title" style="margin-top:14px;">Relics</div>
+          <div class="relics">
+            <div><span class="badge">Lendário</span> Power BI</div>
+            <div><span class="badge">Lendário</span> Excel Avançado</div>
+            <div><span class="badge">Raro</span> Python</div>
+            <div><span class="badge">Raro</span> Microsoft Project</div>
+            <div><span class="badge">Raro</span> Visio / Processos</div>
+          </div>
+        </div>
+
+        <div class="side-panel">
+          <div class="panel-title">Atributos</div>
+          <div class="attributes">
+            <div><strong>Planning:</strong> forte</div>
+            <div><strong>Reporting:</strong> forte</div>
+            <div><strong>Automation:</strong> forte</div>
+            <div><strong>Governance:</strong> forte</div>
+            <div><strong>Process Design:</strong> forte</div>
+            <div><strong>Executive Communication:</strong> forte</div>
+          </div>
+
+          <div class="panel-title" style="margin-top:14px;">Quests Concluídas</div>
+          <div class="quests">
+            <div class="quest-item">Estruturar controles e relatórios integrados.</div>
+            <div class="quest-item">Reduzir retrabalho com padronização e automação.</div>
+            <div class="quest-item">Transformar dados em informação gerencial.</div>
+            <div class="quest-item">Apoiar tomada de decisão com dashboards e status.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- DIALOG -->
+  <div id="dialogOverlay" class="dialog-overlay">
+    <div class="dialog-box">
+      <div class="portrait">
+        <div class="big-sprite">
+          <div class="hair"></div>
+          <div class="head"></div>
+          <div id="portraitBody" class="body" style="background:#2563eb;"></div>
+          <div class="legs"></div>
+        </div>
+        <div id="portraitName" class="name">Wagner</div>
+        <div id="portraitRole" class="role">Estrategista de Projetos</div>
+      </div>
+
+      <div class="dialog-content">
+        <div id="dialogTitle" class="dialog-title">Título</div>
+        <div id="dialogText" class="dialog-text"></div>
+        <div class="dialog-actions">
+          <button class="btn primary" onclick="closeDialog()">Fechar</button>
+          <button class="btn" onclick="openDirectProfile()">Resumo Executivo</button>
+        </div>
+        <div class="footnote">
+          Este é um protótipo funcional em HTML, CSS e JS puros. Depois você pode evoluir para sprites melhores,
+          efeitos de áudio, mapa maior, transições e links reais.
         </div>
       </div>
     </div>
-  </section>
+  </div>
 
   <script>
     const startScreen = document.getElementById("startScreen");
     const gameScreen = document.getElementById("gameScreen");
+    const world = document.getElementById("world");
     const player = document.getElementById("player");
-    const map = document.getElementById("map");
-    const dialog = document.getElementById("dialog");
+    const hintBubble = document.getElementById("hintBubble");
+
+    const dialogOverlay = document.getElementById("dialogOverlay");
     const dialogTitle = document.getElementById("dialogTitle");
-    const dialogContent = document.getElementById("dialogContent");
-    const zones = Array.from(document.querySelectorAll(".zone"));
+    const dialogText = document.getElementById("dialogText");
+    const portraitName = document.getElementById("portraitName");
+    const portraitRole = document.getElementById("portraitRole");
+    const portraitBody = document.getElementById("portraitBody");
+
+    const npcs = [...document.querySelectorAll(".npc")];
+    const buildings = [...document.querySelectorAll(".building")];
 
     const state = {
-      x: 80,
-      y: 280,
-      step: 18,
-      currentZone: null,
-      dialogOpen: false
+      x: 360,
+      y: 250,
+      step: 16,
+      canMove: true,
+      currentInteractable: null
     };
 
-    const content = {
+    const sections = {
       about: {
+        color: "#0ea5e9",
+        speaker: "Ancião da Jornada",
+        role: "Guardião do Resumo Profissional",
         title: "Vila Inicial — Resumo Profissional",
         html: `
           <p>
-            Olá! Eu sou <strong>Wagner Douglas Ramos da Silva</strong>, profissional com atuação em
-            <strong>PMO, gestão de projetos, análise de dados, automação e melhoria de processos</strong>.
+            Bem-vindo, aventureiro. Aqui começa a jornada de <strong>Wagner Douglas Ramos da Silva</strong>,
+            profissional com atuação em <strong>PMO, gestão de projetos, análise de dados, automação e melhoria de processos</strong>.
           </p>
           <p>
-            Minha proposta de valor está em unir visão analítica, organização e tecnologia para transformar
-            controles, relatórios e fluxos operacionais em soluções mais claras para a tomada de decisão.
+            Seu diferencial está em conectar <strong>organização, governança, tecnologia e leitura analítica</strong>
+            para transformar controles, relatórios e fluxos operacionais em soluções mais confiáveis e úteis para a tomada de decisão.
           </p>
           <p>
-            Tenho experiência com ferramentas como <strong>Power BI, Excel, Python, Microsoft Project e Visio</strong>,
-            aplicadas em governança, padronização, reporting executivo e estruturação de processos.
+            Em vez de apenas acompanhar atividades, sua atuação busca <strong>dar clareza ao cenário</strong>,
+            estruturar informações, reduzir ruído, apoiar priorização e melhorar a comunicação entre áreas técnicas e executivas.
           </p>
         `
       },
       experience: {
+        color: "#22c55e",
+        speaker: "Mestre do PMO",
+        role: "Guardião da Experiência",
         title: "Guilda dos Projetos — Experiência",
         html: `
-          <p><strong>Exemplo de estrutura para sua experiência:</strong></p>
+          <p><strong>Exemplo de narrativa profissional para a seção de experiência:</strong></p>
           <ul>
-            <li>Atuação em rotinas de PMO, acompanhamento de cronogramas e controle de entregas.</li>
-            <li>Criação e padronização de planilhas e relatórios gerenciais para áreas distintas.</li>
-            <li>Automação de controles com foco em confiabilidade, redução de retrabalho e ganho de produtividade.</li>
-            <li>Apoio à tomada de decisão por meio de dashboards, análises e acompanhamento físico-financeiro.</li>
-            <li>Integração entre áreas técnicas e executivas com comunicação estruturada e foco em resultado.</li>
+            <li>Atuação em rotinas de <strong>PMO</strong>, acompanhamento de cronogramas, status de iniciativas e controle de entregas.</li>
+            <li>Estruturação e padronização de planilhas, controles e relatórios gerenciais para áreas com necessidades distintas.</li>
+            <li>Suporte ao acompanhamento <strong>físico-financeiro</strong>, leitura de dados e organização de informações para reporting executivo.</li>
+            <li>Integração entre áreas técnicas e gestoras, facilitando comunicação, alinhamento e visibilidade do andamento dos projetos.</li>
+            <li>Melhoria de processos com foco em <strong>confiabilidade da informação, redução de retrabalho e ganho de eficiência</strong>.</li>
           </ul>
           <p>
-            Aqui depois você pode trocar por seus cargos, empresas, períodos e principais resultados.
+            Depois você pode substituir este bloco pelos seus cargos, empresas, períodos e principais entregas com resultados concretos.
           </p>
         `
       },
       skills: {
-        title: "Torre das Skills — Competências",
+        color: "#d97706",
+        speaker: "Guardião das Skills",
+        role: "Mestre dos Atributos Técnicos",
+        title: "Torre das Skills — Habilidades",
         html: `
-          <p><strong>Atributos principais do personagem:</strong></p>
+          <p><strong>Atributos centrais do personagem:</strong></p>
           <ul>
-            <li><strong>Gestão de Projetos:</strong> planejamento, acompanhamento, priorização e governança.</li>
-            <li><strong>Análise de Dados:</strong> estruturação de indicadores, leitura crítica e suporte à decisão.</li>
-            <li><strong>Automação:</strong> melhoria de processos com Excel, Power Query, VBA ou Python.</li>
-            <li><strong>Business Intelligence:</strong> construção de dashboards e visões executivas em Power BI.</li>
-            <li><strong>Mapeamento de Processos:</strong> fluxos, padronização, documentação e ganho de eficiência.</li>
+            <li><strong>Gestão de Projetos:</strong> planejamento, acompanhamento, organização de entregas, status e governança.</li>
+            <li><strong>Análise de Dados:</strong> leitura crítica, estruturação de indicadores e transformação de dados em informação.</li>
+            <li><strong>Automação:</strong> racionalização de tarefas manuais com Excel, Power Query, VBA ou Python.</li>
+            <li><strong>Business Intelligence:</strong> criação de dashboards, painéis executivos e visões analíticas em Power BI.</li>
+            <li><strong>Mapeamento e Melhoria de Processos:</strong> documentação, padronização, lógica operacional e ganho de eficiência.</li>
+            <li><strong>Comunicação Executiva:</strong> organização de conteúdo para gestores e suporte à tomada de decisão.</li>
           </ul>
-          <p><strong>Itens lendários:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</p>
+          <p><strong>Relics lendárias:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</p>
         `
       },
       projects: {
+        color: "#7c3aed",
+        speaker: "Escriba das Missões",
+        role: "Cronista dos Projetos",
         title: "Quadro de Missões — Projetos e Entregas",
         html: `
-          <p><strong>Missões concluídas:</strong></p>
+          <p><strong>Missões concluídas que combinam com o seu perfil:</strong></p>
           <ul>
-            <li>Estruturação de planilhas integradas com maior padronização e confiabilidade.</li>
-            <li>Desenvolvimento de dashboards para acompanhamento de indicadores e status de iniciativas.</li>
-            <li>Automação de controles operacionais, reduzindo esforço manual e inconsistências.</li>
-            <li>Organização de dados para facilitar leitura gerencial e reporting executivo.</li>
-            <li>Melhoria do fluxo de acompanhamento de projetos e comunicação entre áreas.</li>
+            <li>Estruturar planilhas e controles integrados com maior padronização e confiabilidade.</li>
+            <li>Automatizar rotinas operacionais, reduzindo esforço manual e inconsistências recorrentes.</li>
+            <li>Construir dashboards e visões gerenciais para acompanhamento de status, indicadores e performance.</li>
+            <li>Organizar fluxos e informações para facilitar análise, acompanhamento e comunicação entre áreas.</li>
+            <li>Transformar necessidades difusas das áreas em soluções mais claras, utilizáveis e sustentáveis.</li>
           </ul>
           <p>
-            Depois você pode transformar cada item em um “case” com desafio, ação, ferramenta e resultado.
+            Uma versão mais forte desta seção pode usar estrutura <strong>Desafio → Ação → Ferramenta → Resultado</strong>,
+            quase como “quests” completas do jogo.
           </p>
         `
       },
       education: {
+        color: "#dc2626",
+        speaker: "Bibliotecário Real",
+        role: "Guardião do Conhecimento",
         title: "Arquivo Real — Formação",
         html: `
           <ul>
-            <li><strong>MBA em Gestão de Projetos</strong> — FEARP USP (cursando)</li>
+            <li><strong>MBA em Gestão de Projetos</strong> — FEARP USP <em>(cursando)</em></li>
             <li><strong>Pós-graduação em Gestão de Projetos</strong> — Descomplica Faculdade Digital</li>
             <li><strong>Bacharelado em Engenharia Civil</strong></li>
           </ul>
           <p>
-            Aqui também podem entrar certificações, cursos e trilhas complementares, como Power BI,
-            Python, processos, melhoria contínua e gestão.
+            Aqui também entram trilhas e cursos complementares, como Power BI, Excel avançado, Python,
+            automação, análise de dados, processos e governança.
+          </p>
+          <p>
+            Para currículo, essa combinação mostra uma base técnica sólida somada a uma especialização voltada a gestão, organização e resultado.
           </p>
         `
       },
       contact: {
+        color: "#0f766e",
+        speaker: "Guardião do Portal",
+        role: "Mestre do Contato Final",
         title: "Portal Final — Contato",
         html: `
-          <p><strong>Contato do aventureiro:</strong></p>
+          <p>Chegou ao portal final. Aqui estão os dados do aventureiro:</p>
           <ul>
             <li><strong>Nome:</strong> Wagner Douglas Ramos da Silva</li>
             <li><strong>E-mail:</strong> wagnerramoseng@gmail.com</li>
@@ -641,65 +1124,123 @@
             <li><strong>GitHub:</strong> github.com/Ramoswagner</li>
           </ul>
           <p>
-            Aqui você pode adicionar botões reais para abrir LinkedIn, GitHub e baixar seu currículo em PDF.
+            Depois você pode trocar isso por botões reais clicáveis, incluindo:
+            <strong>LinkedIn</strong>, <strong>GitHub</strong>, <strong>currículo em PDF</strong> e até um
+            <strong>botão para WhatsApp</strong>, se fizer sentido para seu portfólio.
+          </p>
+        `
+      },
+      direct: {
+        color: "#2563eb",
+        speaker: "Menu do Reino",
+        role: "Resumo Executivo",
+        title: "Resumo Executivo — Perfil Profissional",
+        html: `
+          <p><strong>Wagner Douglas Ramos da Silva</strong> é um profissional com atuação voltada a
+          <strong>PMO, gestão de projetos, dados, automação e melhoria de processos</strong>.</p>
+
+          <p>
+            Sua proposta de valor está em unir visão analítica, organização e ferramentas tecnológicas para estruturar
+            controles, padronizar informações, reduzir retrabalho e apoiar a tomada de decisão.
+          </p>
+
+          <ul>
+            <li><strong>Foco:</strong> governança, acompanhamento, reporting, organização de informações e eficiência operacional.</li>
+            <li><strong>Ferramentas:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</li>
+            <li><strong>Diferenciais:</strong> leitura crítica, construção de soluções práticas, interface entre áreas e mentalidade de melhoria contínua.</li>
+            <li><strong>Formação:</strong> Engenharia Civil + especializações em Gestão de Projetos.</li>
+          </ul>
+
+          <p>
+            Em linguagem de recrutador: perfil com boa aderência a funções como
+            <strong>Analista de Projetos, PMO, Planejamento, Processos, Governança e Dados aplicados à gestão</strong>.
+          </p>
+        `
+      },
+      manual: {
+        color: "#b45309",
+        speaker: "Guia do Reino",
+        role: "Manual do Aventureiro",
+        title: "Como Jogar",
+        html: `
+          <ul>
+            <li>Use <strong>WASD</strong> ou as <strong>setas</strong> para mover o personagem.</li>
+            <li>Aproxime-se de um <strong>NPC</strong> ou construção temática.</li>
+            <li>Pressione <strong>E</strong> ou <strong>Enter</strong> para interagir.</li>
+            <li>No celular, use os botões na tela.</li>
+            <li>Também é possível abrir cada seção direto pelo <strong>menu lateral</strong>.</li>
+          </ul>
+          <p>
+            Este protótipo foi pensado para funcionar como um currículo-jogo leve,
+            fácil de publicar no <strong>GitHub Pages</strong> e simples de evoluir depois.
           </p>
         `
       }
     };
 
-    function showIntro() {
-      alert(
-        "Este é um exemplo inicial de currículo em formato RPG, tudo em um único HTML. " +
-        "Depois dá para melhorar com pixel art, música, inventário, NPCs e transições."
-      );
-    }
-
-    function startGame() {
+    function startGame(){
       startScreen.classList.remove("active");
       gameScreen.classList.add("active");
       positionPlayer();
     }
 
-    function positionPlayer() {
-      player.style.left = state.x + "px";
-      player.style.top = state.y + "px";
-      detectZone();
+    function backToTitle(){
+      closeDialog();
+      gameScreen.classList.remove("active");
+      startScreen.classList.add("active");
     }
 
-    function clamp(value, min, max) {
-      return Math.max(min, Math.min(max, value));
+    function openManual(){
+      openDialogFromData(sections.manual);
     }
 
-    function getMapBounds() {
-      const mapRect = map.getBoundingClientRect();
-      const playerRect = player.getBoundingClientRect();
+    function openDirectProfile(){
+      openDialogFromData(sections.direct);
+    }
+
+    function openSection(key){
+      if(sections[key]) openDialogFromData(sections[key]);
+    }
+
+    function getWorldBounds(){
+      const wr = world.getBoundingClientRect();
       return {
-        width: mapRect.width,
-        height: mapRect.height,
-        playerWidth: playerRect.width || 42,
-        playerHeight: playerRect.height || 42
+        width: wr.width,
+        height: wr.height,
+        playerWidth: 34,
+        playerHeight: 42
       };
     }
 
-    function movePlayer(direction) {
-      if (state.dialogOpen) return;
+    function clamp(n,min,max){
+      return Math.max(min, Math.min(max, n));
+    }
 
-      const bounds = getMapBounds();
+    function positionPlayer(){
+      player.style.left = state.x + "px";
+      player.style.top = state.y + "px";
+      detectInteractable();
+    }
 
-      if (direction === "up") state.y -= state.step;
-      if (direction === "down") state.y += state.step;
-      if (direction === "left") state.x -= state.step;
-      if (direction === "right") state.x += state.step;
+    function movePlayer(direction){
+      if(!state.canMove) return;
 
-      state.x = clamp(state.x, 0, bounds.width - bounds.playerWidth);
-      state.y = clamp(state.y, 0, bounds.height - bounds.playerHeight);
+      const b = getWorldBounds();
+
+      if(direction === "up") state.y -= state.step;
+      if(direction === "down") state.y += state.step;
+      if(direction === "left") state.x -= state.step;
+      if(direction === "right") state.x += state.step;
+
+      state.x = clamp(state.x, 0, b.width - b.playerWidth);
+      state.y = clamp(state.y, 0, b.height - b.playerHeight);
 
       positionPlayer();
     }
 
-    function isColliding(el1, el2) {
-      const r1 = el1.getBoundingClientRect();
-      const r2 = el2.getBoundingClientRect();
+    function rectsOverlap(a, b){
+      const r1 = a.getBoundingClientRect();
+      const r2 = b.getBoundingClientRect();
 
       return !(
         r1.right < r2.left ||
@@ -709,60 +1250,105 @@
       );
     }
 
-    function detectZone() {
-      state.currentZone = null;
+    function nearElement(a, b, margin = 18){
+      const r1 = a.getBoundingClientRect();
+      const r2 = b.getBoundingClientRect();
 
-      zones.forEach(zone => {
-        zone.style.outline = "none";
-        if (isColliding(player, zone)) {
-          state.currentZone = zone.dataset.key;
-          zone.style.outline = "4px solid rgba(255,255,255,.35)";
-        }
-      });
+      return !(
+        r1.right + margin < r2.left ||
+        r1.left - margin > r2.right ||
+        r1.bottom + margin < r2.top ||
+        r1.top - margin > r2.bottom
+      );
     }
 
-    function interact() {
-      if (state.currentZone && content[state.currentZone]) {
-        openDialog(state.currentZone);
+    function detectInteractable(){
+      state.currentInteractable = null;
+
+      for(const npc of npcs){
+        if(nearElement(player, npc, 20) || rectsOverlap(player, npc)){
+          state.currentInteractable = npc.dataset.key;
+          showHint("Pressione E para falar com " + npc.querySelector(".npc-name").textContent);
+          return;
+        }
+      }
+
+      for(const building of buildings){
+        if(nearElement(player, building, 16) || rectsOverlap(player, building)){
+          const zone = building.dataset.zone;
+          state.currentInteractable = zone;
+          showHint("Pressione E para entrar em " + building.innerText.replace(/\s+/g, " ").trim());
+          return;
+        }
+      }
+
+      hideHint();
+    }
+
+    function showHint(text){
+      hintBubble.textContent = text;
+      hintBubble.classList.add("active");
+    }
+
+    function hideHint(){
+      hintBubble.classList.remove("active");
+    }
+
+    function interact(){
+      if(state.currentInteractable && sections[state.currentInteractable]){
+        openDialogFromData(sections[state.currentInteractable]);
       }
     }
 
-    function openDialog(key) {
-      const item = content[key];
-      dialogTitle.innerHTML = item.title;
-      dialogContent.innerHTML = item.html;
-      dialog.classList.add("active");
-      state.dialogOpen = true;
+    function openDialogFromData(data){
+      state.canMove = false;
+      dialogOverlay.classList.add("active");
+      dialogTitle.innerHTML = data.title;
+      dialogText.innerHTML = data.html;
+      portraitName.textContent = data.speaker;
+      portraitRole.textContent = data.role;
+      portraitBody.style.background = data.color;
     }
 
-    function closeDialog() {
-      dialog.classList.remove("active");
-      state.dialogOpen = false;
+    function closeDialog(){
+      dialogOverlay.classList.remove("active");
+      state.canMove = true;
+      detectInteractable();
     }
 
-    document.addEventListener("keydown", (e) => {
+    document.addEventListener("keydown", (e)=>{
       const key = e.key.toLowerCase();
 
-      if (key === "escape") {
+      if(key === "escape"){
         closeDialog();
         return;
       }
 
-      if (key === "enter" || key === "e") {
+      if(key === "e" || key === "enter"){
         interact();
         return;
       }
 
-      if (key === "arrowup" || key === "w") movePlayer("up");
-      if (key === "arrowdown" || key === "s") movePlayer("down");
-      if (key === "arrowleft" || key === "a") movePlayer("left");
-      if (key === "arrowright" || key === "d") movePlayer("right");
+      if(!state.canMove) return;
+
+      if(key === "arrowup" || key === "w") movePlayer("up");
+      if(key === "arrowdown" || key === "s") movePlayer("down");
+      if(key === "arrowleft" || key === "a") movePlayer("left");
+      if(key === "arrowright" || key === "d") movePlayer("right");
     });
 
-    window.addEventListener("resize", () => {
-      const bounds = getMapBounds();
-      state.x = clamp(state.x, 0, bounds.width - bounds.playerWidth);
-      state.y = clamp(state.y, 0, bounds.height - bounds.playerHeight);
+    npcs.forEach(npc=>{
+      npc.addEventListener("click", ()=>openSection(npc.dataset.key));
+    });
+
+    buildings.forEach(building=>{
+      building.addEventListener("click", ()=>openSection(building.dataset.zone));
+    });
+
+    window.addEventListener("resize", ()=>{
+      const b = getWorldBounds();
+      state.x = clamp(state.x, 0, b.width - b.playerWidth);
+      state.y = clamp(state.y, 0, b.height - b.playerHeight);
       positionPlayer();
     });
   </script>
