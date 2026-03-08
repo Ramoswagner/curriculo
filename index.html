@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wagner Quest - Currículo RPG</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.92);
+      --panel-2: rgba(30, 41, 59, 0.95);
+      --text: #e2e8f0;
+      --accent: #38bdf8;
+      --accent-2: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --tile-grass: #1e7a43;
+      --tile-path: #a16207;
+      --tile-water: #2563eb;
+      --tile-stone: #475569;
+      --shadow: 0 10px 25px rgba(0,0,0,0.35);
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #020617 0%, #0f172a 100%);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100vh;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Tela inicial */
+    #startScreen {
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top, rgba(56,189,248,.15), transparent 35%),
+        radial-gradient(circle at bottom, rgba(34,197,94,.12), transparent 35%),
+        linear-gradient(180deg, #020617, #0f172a);
+    }
+
+    .start-card {
+      width: min(900px, 100%);
+      background: var(--panel);
+      border: 2px solid rgba(56,189,248,.35);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 32px;
+      text-align: center;
+    }
+
+    .start-card h1 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      margin-bottom: 12px;
+      color: #f8fafc;
+    }
+
+    .start-card h2 {
+      font-size: clamp(1rem, 2vw, 1.35rem);
+      color: #94a3b8;
+      margin-bottom: 20px;
+      font-weight: 400;
+    }
+
+    .start-card p {
+      max-width: 720px;
+      margin: 0 auto 24px;
+      line-height: 1.7;
+      color: #cbd5e1;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-size: 1rem;
+      font-weight: 700;
+      transition: 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: white;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+    }
+
+    .mini-note {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: #94a3b8;
+    }
+
+    /* Jogo */
+    #gameScreen {
+      position: relative;
+      flex-direction: column;
+    }
+
+    .topbar {
+      width: 100%;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(2, 6, 23, 0.8);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      z-index: 5;
+    }
+
+    .topbar .title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .topbar .hint {
+      font-size: 0.92rem;
+      color: #94a3b8;
+      text-align: right;
+    }
+
+    .game-wrapper {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .map-frame {
+      position: relative;
+      width: min(1000px, 100%);
+      aspect-ratio: 16 / 9;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.08);
+      box-shadow: var(--shadow);
+      background: #0b1220;
+    }
+
+    #map {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(180deg, #14532d 0%, #166534 100%);
+      background-size: 48px 48px, 48px 48px, cover;
+    }
+
+    .zone {
+      position: absolute;
+      border-radius: 16px;
+      border: 2px solid rgba(255,255,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 10px;
+      font-weight: 700;
+      line-height: 1.3;
+      color: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.15);
+    }
+
+    .zone small {
+      display: block;
+      font-weight: 400;
+      opacity: 0.95;
+      margin-top: 4px;
+      font-size: 0.78rem;
+    }
+
+    .zone.about { background: linear-gradient(135deg, #0ea5e9, #0369a1); }
+    .zone.exp { background: linear-gradient(135deg, #22c55e, #15803d); }
+    .zone.skills { background: linear-gradient(135deg, #f59e0b, #b45309); }
+    .zone.projects { background: linear-gradient(135deg, #8b5cf6, #6d28d9); }
+    .zone.education { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+    .zone.contact { background: linear-gradient(135deg, #14b8a6, #0f766e); }
+
+    .player {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #f8fafc, #cbd5e1);
+      border: 3px solid #0f172a;
+      box-shadow: 0 6px 10px rgba(0,0,0,.25);
+      z-index: 3;
+      transition: transform 0.05s linear;
+    }
+
+    .player::before {
+      content: "";
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: #0f172a;
+      border-radius: 50%;
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .player::after {
+      content: "";
+      position: absolute;
+      width: 22px;
+      height: 10px;
+      background: #38bdf8;
+      border-radius: 6px;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .hud {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 4;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+      min-width: 220px;
+      backdrop-filter: blur(6px);
+    }
+
+    .hud h3 {
+      font-size: 1rem;
+      margin-bottom: 6px;
+      color: #f8fafc;
+    }
+
+    .hud p {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .dialog {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      width: min(900px, calc(100% - 24px));
+      background: var(--panel);
+      border: 1px solid rgba(56,189,248,.25);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      z-index: 10;
+      display: none;
+    }
+
+    .dialog.active {
+      display: block;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .dialog-header h3 {
+      font-size: 1.2rem;
+      color: white;
+    }
+
+    .dialog-content {
+      max-height: 260px;
+      overflow: auto;
+      padding-right: 6px;
+      line-height: 1.65;
+      color: #e2e8f0;
+    }
+
+    .dialog-content p {
+      margin-bottom: 10px;
+    }
+
+    .dialog-content ul {
+      padding-left: 18px;
+      margin-bottom: 10px;
+    }
+
+    .dialog-content li {
+      margin-bottom: 6px;
+    }
+
+    .close-btn {
+      background: #1e293b;
+      color: white;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      border-radius: 10px;
+    }
+
+    .mobile-controls {
+      position: absolute;
+      right: 16px;
+      bottom: 110px;
+      z-index: 4;
+      display: none;
+      grid-template-columns: 60px 60px 60px;
+      gap: 8px;
+    }
+
+    .mobile-controls button {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.9);
+      color: white;
+      font-size: 1.2rem;
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .legend {
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      z-index: 4;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 12px 14px;
+      max-width: 240px;
+    }
+
+    .legend h4 {
+      margin-bottom: 8px;
+      color: #f8fafc;
+    }
+
+    .legend p {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 900px) {
+      .legend {
+        display: none;
+      }
+
+      .mobile-controls {
+        display: grid;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .topbar .hint {
+        text-align: left;
+      }
+
+      .dialog-content {
+        max-height: 220px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .start-card {
+        padding: 24px 18px;
+      }
+
+      .hud {
+        min-width: auto;
+        width: calc(100% - 32px);
+      }
+
+      .mobile-controls {
+        right: 12px;
+        bottom: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Tela inicial -->
+  <section id="startScreen" class="screen active">
+    <div class="start-card">
+      <h1>Wagner Quest</h1>
+      <h2>Currículo Interativo em estilo RPG</h2>
+      <p>
+        Explore o mapa, converse com os pontos de interesse e descubra a jornada profissional
+        de <strong>Wagner Douglas Ramos da Silva</strong> como se estivesse em um mini RPG.
+        Cada área representa uma parte do currículo: experiência, habilidades, projetos, formação e contato.
+      </p>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="startGame()">Iniciar Jornada</button>
+        <button class="btn-secondary" onclick="showIntro()">Sobre o Projeto</button>
+      </div>
+
+      <p class="mini-note">
+        Dica: no computador use <strong>WASD</strong> ou <strong>setas</strong>. No celular, use os botões na tela.
+      </p>
+    </div>
+  </section>
+
+  <!-- Tela do jogo -->
+  <section id="gameScreen" class="screen">
+    <div class="topbar">
+      <div class="title">🎮 Wagner Quest — Explore o mapa profissional</div>
+      <div class="hint">
+        Mova-se até uma área colorida para abrir uma seção do currículo
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <div class="map-frame">
+        <div id="map">
+          <div class="hud">
+            <h3>Personagem</h3>
+            <p>
+              <strong>Classe:</strong> Estrategista de Projetos<br>
+              <strong>Especialidade:</strong> PMO, Dados, Processos e Automação
+            </p>
+          </div>
+
+          <div class="legend">
+            <h4>Missão principal</h4>
+            <p>
+              Descobrir a trajetória profissional do candidato explorando as regiões do mapa.
+            </p>
+          </div>
+
+          <!-- Áreas -->
+          <div class="zone about" data-key="about" style="left: 7%; top: 15%; width: 18%; height: 18%;">
+            Vila Inicial
+            <small>Resumo profissional</small>
+          </div>
+
+          <div class="zone exp" data-key="experience" style="left: 38%; top: 10%; width: 24%; height: 20%;">
+            Guilda dos Projetos
+            <small>Experiência</small>
+          </div>
+
+          <div class="zone skills" data-key="skills" style="left: 70%; top: 16%; width: 20%; height: 18%;">
+            Torre das Skills
+            <small>Competências</small>
+          </div>
+
+          <div class="zone projects" data-key="projects" style="left: 12%; top: 58%; width: 22%; height: 20%;">
+            Quadro de Missões
+            <small>Projetos e entregas</small>
+          </div>
+
+          <div class="zone education" data-key="education" style="left: 42%; top: 58%; width: 22%; height: 20%;">
+            Arquivo Real
+            <small>Formação</small>
+          </div>
+
+          <div class="zone contact" data-key="contact" style="left: 72%; top: 58%; width: 18%; height: 20%;">
+            Portal Final
+            <small>Contato</small>
+          </div>
+
+          <!-- Jogador -->
+          <div id="player" class="player"></div>
+
+          <!-- Controles mobile -->
+          <div class="mobile-controls">
+            <div></div>
+            <button onclick="movePlayer('up')">▲</button>
+            <div></div>
+
+            <button onclick="movePlayer('left')">◀</button>
+            <button onclick="interact()">●</button>
+            <button onclick="movePlayer('right')">▶</button>
+
+            <div></div>
+            <button onclick="movePlayer('down')">▼</button>
+            <div></div>
+          </div>
+
+          <!-- Diálogo -->
+          <div id="dialog" class="dialog">
+            <div class="dialog-header">
+              <h3 id="dialogTitle">Título</h3>
+              <button class="close-btn" onclick="closeDialog()">Fechar</button>
+            </div>
+            <div id="dialogContent" class="dialog-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const player = document.getElementById("player");
+    const map = document.getElementById("map");
+    const dialog = document.getElementById("dialog");
+    const dialogTitle = document.getElementById("dialogTitle");
+    const dialogContent = document.getElementById("dialogContent");
+    const zones = Array.from(document.querySelectorAll(".zone"));
+
+    const state = {
+      x: 80,
+      y: 280,
+      step: 18,
+      currentZone: null,
+      dialogOpen: false
+    };
+
+    const content = {
+      about: {
+        title: "Vila Inicial — Resumo Profissional",
+        html: `
+          <p>
+            Olá! Eu sou <strong>Wagner Douglas Ramos da Silva</strong>, profissional com atuação em
+            <strong>PMO, gestão de projetos, análise de dados, automação e melhoria de processos</strong>.
+          </p>
+          <p>
+            Minha proposta de valor está em unir visão analítica, organização e tecnologia para transformar
+            controles, relatórios e fluxos operacionais em soluções mais claras para a tomada de decisão.
+          </p>
+          <p>
+            Tenho experiência com ferramentas como <strong>Power BI, Excel, Python, Microsoft Project e Visio</strong>,
+            aplicadas em governança, padronização, reporting executivo e estruturação de processos.
+          </p>
+        `
+      },
+      experience: {
+        title: "Guilda dos Projetos — Experiência",
+        html: `
+          <p><strong>Exemplo de estrutura para sua experiência:</strong></p>
+          <ul>
+            <li>Atuação em rotinas de PMO, acompanhamento de cronogramas e controle de entregas.</li>
+            <li>Criação e padronização de planilhas e relatórios gerenciais para áreas distintas.</li>
+            <li>Automação de controles com foco em confiabilidade, redução de retrabalho e ganho de produtividade.</li>
+            <li>Apoio à tomada de decisão por meio de dashboards, análises e acompanhamento físico-financeiro.</li>
+            <li>Integração entre áreas técnicas e executivas com comunicação estruturada e foco em resultado.</li>
+          </ul>
+          <p>
+            Aqui depois você pode trocar por seus cargos, empresas, períodos e principais resultados.
+          </p>
+        `
+      },
+      skills: {
+        title: "Torre das Skills — Competências",
+        html: `
+          <p><strong>Atributos principais do personagem:</strong></p>
+          <ul>
+            <li><strong>Gestão de Projetos:</strong> planejamento, acompanhamento, priorização e governança.</li>
+            <li><strong>Análise de Dados:</strong> estruturação de indicadores, leitura crítica e suporte à decisão.</li>
+            <li><strong>Automação:</strong> melhoria de processos com Excel, Power Query, VBA ou Python.</li>
+            <li><strong>Business Intelligence:</strong> construção de dashboards e visões executivas em Power BI.</li>
+            <li><strong>Mapeamento de Processos:</strong> fluxos, padronização, documentação e ganho de eficiência.</li>
+          </ul>
+          <p><strong>Itens lendários:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</p>
+        `
+      },
+      projects: {
+        title: "Quadro de Missões — Projetos e Entregas",
+        html: `
+          <p><strong>Missões concluídas:</strong></p>
+          <ul>
+            <li>Estruturação de planilhas integradas com maior padronização e confiabilidade.</li>
+            <li>Desenvolvimento de dashboards para acompanhamento de indicadores e status de iniciativas.</li>
+            <li>Automação de controles operacionais, reduzindo esforço manual e inconsistências.</li>
+            <li>Organização de dados para facilitar leitura gerencial e reporting executivo.</li>
+            <li>Melhoria do fluxo de acompanhamento de projetos e comunicação entre áreas.</li>
+          </ul>
+          <p>
+            Depois você pode transformar cada item em um “case” com desafio, ação, ferramenta e resultado.
+          </p>
+        `
+      },
+      education: {
+        title: "Arquivo Real — Formação",
+        html: `
+          <ul>
+            <li><strong>MBA em Gestão de Projetos</strong> — FEARP USP (cursando)</li>
+            <li><strong>Pós-graduação em Gestão de Projetos</strong> — Descomplica Faculdade Digital</li>
+            <li><strong>Bacharelado em Engenharia Civil</strong></li>
+          </ul>
+          <p>
+            Aqui também podem entrar certificações, cursos e trilhas complementares, como Power BI,
+            Python, processos, melhoria contínua e gestão.
+          </p>
+        `
+      },
+      contact: {
+        title: "Portal Final — Contato",
+        html: `
+          <p><strong>Contato do aventureiro:</strong></p>
+          <ul>
+            <li><strong>Nome:</strong> Wagner Douglas Ramos da Silva</li>
+            <li><strong>E-mail:</strong> wagnerramoseng@gmail.com</li>
+            <li><strong>LinkedIn:</strong> linkedin.com/in/engwagnerramos</li>
+            <li><strong>GitHub:</strong> github.com/Ramoswagner</li>
+          </ul>
+          <p>
+            Aqui você pode adicionar botões reais para abrir LinkedIn, GitHub e baixar seu currículo em PDF.
+          </p>
+        `
+      }
+    };
+
+    function showIntro() {
+      alert(
+        "Este é um exemplo inicial de currículo em formato RPG, tudo em um único HTML. " +
+        "Depois dá para melhorar com pixel art, música, inventário, NPCs e transições."
+      );
+    }
+
+    function startGame() {
+      startScreen.classList.remove("active");
+      gameScreen.classList.add("active");
+      positionPlayer();
+    }
+
+    function positionPlayer() {
+      player.style.left = state.x + "px";
+      player.style.top = state.y + "px";
+      detectZone();
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function getMapBounds() {
+      const mapRect = map.getBoundingClientRect();
+      const playerRect = player.getBoundingClientRect();
+      return {
+        width: mapRect.width,
+        height: mapRect.height,
+        playerWidth: playerRect.width || 42,
+        playerHeight: playerRect.height || 42
+      };
+    }
+
+    function movePlayer(direction) {
+      if (state.dialogOpen) return;
+
+      const bounds = getMapBounds();
+
+      if (direction === "up") state.y -= state.step;
+      if (direction === "down") state.y += state.step;
+      if (direction === "left") state.x -= state.step;
+      if (direction === "right") state.x += state.step;
+
+      state.x = clamp(state.x, 0, bounds.width - bounds.playerWidth);
+      state.y = clamp(state.y, 0, bounds.height - bounds.playerHeight);
+
+      positionPlayer();
+    }
+
+    function isColliding(el1, el2) {
+      const r1 = el1.getBoundingClientRect();
+      const r2 = el2.getBoundingClientRect();
+
+      return !(
+        r1.right < r2.left ||
+        r1.left > r2.right ||
+        r1.bottom < r2.top ||
+        r1.top > r2.bottom
+      );
+    }
+
+    function detectZone() {
+      state.currentZone = null;
+
+      zones.forEach(zone => {
+        zone.style.outline = "none";
+        if (isColliding(player, zone)) {
+          state.currentZone = zone.dataset.key;
+          zone.style.outline = "4px solid rgba(255,255,255,.35)";
+        }
+      });
+    }
+
+    function interact() {
+      if (state.currentZone && content[state.currentZone]) {
+        openDialog(state.currentZone);
+      }
+    }
+
+    function openDialog(key) {
+      const item = content[key];
+      dialogTitle.innerHTML = item.title;
+      dialogContent.innerHTML = item.html;
+      dialog.classList.add("active");
+      state.dialogOpen = true;
+    }
+
+    function closeDialog() {
+      dialog.classList.remove("active");
+      state.dialogOpen = false;
+    }
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+
+      if (key === "escape") {
+        closeDialog();
+        return;
+      }
+
+      if (key === "enter" || key === "e") {
+        interact();
+        return;
+      }
+
+      if (key === "arrowup" || key === "w") movePlayer("up");
+      if (key === "arrowdown" || key === "s") movePlayer("down");
+      if (key === "arrowleft" || key === "a") movePlayer("left");
+      if (key === "arrowright" || key === "d") movePlayer("right");
+    });
+
+    window.addEventListener("resize", () => {
+      const bounds = getMapBounds();
+      state.x = clamp(state.x, 0, bounds.width - bounds.playerWidth);
+      state.y = clamp(state.y, 0, bounds.height - bounds.playerHeight);
+      positionPlayer();
+    });
+  </script>
+</body>
+</html>
