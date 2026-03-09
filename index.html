@@ -1,1356 +1,1234 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Wagner Quest — JRPG Currículo</title>
-  <style>
-    :root{
-      --bg:#0f1020;
-      --panel:#1a1d35;
-      --panel-2:#262a4d;
-      --panel-3:#0b0d1a;
-      --line:#7dd3fc;
-      --line-2:#facc15;
-      --text:#f8fafc;
-      --muted:#cbd5e1;
-      --grass:#2f8f46;
-      --grass-2:#26773a;
-      --stone:#8b8fa8;
-      --stone-2:#6d7289;
-      --water:#2b74d8;
-      --water-2:#1d57a8;
-      --sand:#c9a65c;
-      --tree:#205b2e;
-      --roof:#8f2f2f;
-      --wall:#e2d0ad;
-      --wood:#7b4d24;
-      --shadow:0 8px 0 rgba(0,0,0,.18), 0 18px 30px rgba(0,0,0,.35);
-    }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wagner Douglas — 3D World Portfolio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Rajdhani:wght@400;500;600;700&display=swap');
 
-    *{box-sizing:border-box;margin:0;padding:0}
-    html,body{height:100%}
-    body{
-      font-family: "Courier New", monospace;
-      background:
-        radial-gradient(circle at top, rgba(125,211,252,.08), transparent 30%),
-        linear-gradient(180deg, #080912, #12152a 50%, #0a0c17);
-      color:var(--text);
-      overflow:hidden;
-      image-rendering: pixelated;
-    }
+:root {
+  --gold: #d4a84b;
+  --gold-bright: #f5cc6e;
+  --gold-dim: #6b5220;
+  --teal: #4ecdc4;
+  --cream: #f0e6cc;
+  --dark: #080c14;
+  --panel-bg: rgba(5,9,18,0.95);
+  --border: rgba(212,168,75,0.35);
+  --glow: 0 0 24px rgba(212,168,75,0.25);
+}
 
-    .screen{
-      display:none;
-      width:100%;
-      height:100vh;
-    }
-    .screen.active{display:flex}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#080c14}
+body{font-family:'Rajdhani',sans-serif;color:var(--cream)}
 
-    /* ========== START SCREEN ========== */
-    #startScreen{
-      align-items:center;
-      justify-content:center;
-      padding:24px;
-      position:relative;
-      overflow:hidden;
-    }
+/* ── LOADING ─────────────────────────────────── */
+#loading{
+  position:fixed;inset:0;z-index:9000;
+  background:var(--dark);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:28px;
+}
+.load-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(1.8rem,4vw,3.6rem);
+  color:var(--gold);
+  letter-spacing:4px;
+  text-shadow:0 0 40px rgba(212,168,75,.7),0 0 80px rgba(212,168,75,.3);
+  animation:pulse 2s ease-in-out infinite alternate;
+}
+@keyframes pulse{from{text-shadow:0 0 20px rgba(212,168,75,.4);}to{text-shadow:0 0 60px rgba(212,168,75,.9),0 0 100px rgba(212,168,75,.4);}}
+.load-sub{font-family:'Cinzel',serif;font-size:.95rem;color:var(--teal);letter-spacing:5px;text-transform:uppercase;}
+.load-bar-wrap{width:360px;max-width:88vw;height:3px;background:rgba(255,255,255,.07);border:1px solid rgba(212,168,75,.2);overflow:hidden;}
+.load-bar{height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));width:0%;transition:width .25s ease;box-shadow:0 0 10px var(--gold);}
+.load-tip{font-size:.82rem;color:rgba(240,230,204,.4);letter-spacing:2px;text-transform:uppercase;text-align:center;}
 
-    .stars, .stars::before, .stars::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background-image:
-        radial-gradient(circle, rgba(255,255,255,.9) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,.5) 1px, transparent 1px),
-        radial-gradient(circle, rgba(255,255,255,.7) 1px, transparent 1px);
-      background-size: 120px 120px, 180px 180px, 240px 240px;
-      background-position: 0 0, 30px 60px, 90px 20px;
-      opacity:.35;
-      animation: twinkle 8s linear infinite;
-      pointer-events:none;
-    }
-    .stars::before{animation-duration:12s;opacity:.18}
-    .stars::after{animation-duration:16s;opacity:.12}
-    @keyframes twinkle{
-      from{transform:translateY(0)}
-      to{transform:translateY(16px)}
-    }
+/* ── CANVAS ─────────────────────────────────── */
+#c{position:fixed;inset:0;display:block;outline:none;}
 
-    .start-card{
-      position:relative;
-      width:min(980px,100%);
-      background:linear-gradient(180deg,var(--panel),#101327);
-      border:4px solid #cbd5e1;
-      box-shadow:var(--shadow);
-      padding:26px;
-      z-index:2;
-    }
+/* ── TOP HUD ─────────────────────────────────── */
+#hud{
+  position:fixed;top:0;left:0;right:0;height:54px;
+  background:linear-gradient(180deg,rgba(4,7,14,.97),rgba(6,10,20,.88));
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 18px;gap:14px;
+  z-index:200;pointer-events:auto;
+}
+.hud-brand{
+  font-family:'Cinzel Decorative',serif;
+  font-size:1rem;color:var(--gold);
+  text-shadow:var(--glow);
+  letter-spacing:2px;white-space:nowrap;
+}
+.hud-sep{width:1px;height:28px;background:linear-gradient(180deg,transparent,rgba(212,168,75,.4),transparent);}
+.hud-controls{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  gap:6px;font-family:'Cinzel',serif;font-size:.68rem;
+  color:rgba(240,230,204,.5);letter-spacing:1px;
+}
+.hud-key{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);
+  padding:2px 7px;font-size:.72rem;color:var(--gold-bright);
+  font-family:'Rajdhani',sans-serif;font-weight:700;
+}
+.hud-badge{
+  display:flex;align-items:center;gap:8px;
+  font-family:'Cinzel',serif;font-size:.72rem;color:var(--teal);white-space:nowrap;
+}
+.hexbadge{
+  width:34px;height:34px;
+  background:rgba(212,168,75,.1);border:2px solid var(--gold-dim);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;font-weight:900;color:var(--gold-bright);
+  font-family:'Cinzel Decorative',serif;
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+}
 
-    .pixel-frame{
-      border:4px solid #0b1020;
-      outline:4px solid #cbd5e1;
-      box-shadow:inset 0 0 0 4px #374151;
-    }
+/* ── MINIMAP ─────────────────────────────────── */
+#minimap{
+  position:fixed;bottom:14px;right:14px;
+  width:160px;height:160px;z-index:200;
+  background:rgba(4,7,14,.9);
+  border:1px solid var(--border);
+  box-shadow:var(--glow),inset 0 0 20px rgba(0,0,0,.5);
+  overflow:hidden;
+}
+#minimapCanvas{width:100%;height:100%;}
+.minimap-label{
+  position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  font-family:'Cinzel',serif;font-size:.55rem;
+  color:rgba(212,168,75,.55);letter-spacing:2px;
+  text-transform:uppercase;pointer-events:none;
+}
 
-    .logo{
-      padding:24px 16px;
-      text-align:center;
-      background:
-        linear-gradient(180deg, rgba(125,211,252,.12), rgba(250,204,21,.08)),
-        #101428;
-      margin-bottom:18px;
-    }
+/* ── HERO STATS PANEL ────────────────────────── */
+#statsPanel{
+  position:fixed;left:14px;top:68px;
+  width:200px;z-index:200;
+  background:var(--panel-bg);
+  border:1px solid var(--border);
+  box-shadow:var(--glow),inset 0 0 30px rgba(0,0,0,.6);
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,12px 100%,0 calc(100% - 12px));
+}
+.sp-portrait{
+  height:90px;width:100%;
+  background:radial-gradient(ellipse at center,rgba(78,205,196,.08),transparent 70%),
+             linear-gradient(135deg,#050f08,#0a1a0d);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#portraitCanvas{width:100%;height:100%;}
+.sp-name{
+  padding:8px 12px 4px;
+  font-family:'Cinzel',serif;font-size:.82rem;
+  font-weight:700;color:var(--gold-bright);
+  border-bottom:1px solid rgba(212,168,75,.12);
+}
+.sp-role{font-size:.68rem;color:var(--teal);letter-spacing:1px;padding:0 12px 8px;}
+.sp-stats{padding:8px 12px;display:flex;flex-direction:column;gap:7px;}
+.sp-stat-label{display:flex;justify-content:space-between;font-size:.65rem;letter-spacing:1px;text-transform:uppercase;color:rgba(240,230,204,.45);margin-bottom:2px;}
+.sp-stat-label span:last-child{color:var(--gold);}
+.sp-bar-bg{height:3px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden;}
+.sp-bar{height:100%;border-radius:1px;transition:width 1.2s ease;}
+.sp-bar.g{background:linear-gradient(90deg,var(--gold-dim),var(--gold-bright));box-shadow:0 0 5px var(--gold);}
+.sp-bar.t{background:linear-gradient(90deg,#1a6e62,var(--teal));box-shadow:0 0 5px var(--teal);}
+.sp-bar.r{background:linear-gradient(90deg,#7a2020,#e05050);box-shadow:0 0 5px #e05050;}
+.sp-bar.b{background:linear-gradient(90deg,#1a3a7a,#4a7adc);box-shadow:0 0 5px #4a7adc;}
+.sp-items{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:4px;
+  padding:6px 10px 10px;
+  border-top:1px solid rgba(212,168,75,.1);
+}
+.sp-item{
+  aspect-ratio:1;background:rgba(255,255,255,.03);
+  border:1px solid rgba(212,168,75,.18);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1rem;cursor:pointer;transition:all .2s;position:relative;
+}
+.sp-item:hover{background:rgba(212,168,75,.1);border-color:var(--gold);box-shadow:var(--glow);}
+.sp-item[data-t]:hover::after{
+  content:attr(data-t);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);
+  background:rgba(4,7,14,.98);border:1px solid var(--border);padding:3px 7px;
+  font-family:'Rajdhani',sans-serif;font-size:.65rem;color:var(--gold-bright);
+  white-space:nowrap;pointer-events:none;z-index:999;
+}
 
-    .logo h1{
-      font-size:clamp(2rem,4vw,4rem);
-      letter-spacing:2px;
-      color:#fff;
-      text-shadow:
-        3px 3px 0 #1e3a8a,
-        6px 6px 0 #0f172a;
-      margin-bottom:10px;
-    }
+/* ── INTERACTION PROMPT ──────────────────────── */
+#prompt{
+  position:fixed;bottom:200px;left:50%;transform:translateX(-50%);
+  z-index:200;
+  background:rgba(4,7,14,.92);
+  border:1px solid var(--border);
+  padding:10px 22px;
+  font-family:'Cinzel',serif;font-size:.82rem;
+  color:var(--gold-bright);
+  letter-spacing:2px;text-align:center;
+  box-shadow:var(--glow);
+  display:none;
+  animation:promptPop .3s ease;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+}
+@keyframes promptPop{from{opacity:0;transform:translateX(-50%) translateY(10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 
-    .logo p{
-      color:#dbeafe;
-      font-size:1rem;
-      line-height:1.7;
-      max-width:780px;
-      margin:0 auto;
-    }
+/* ── SECTION OVERLAY ─────────────────────────── */
+#overlay{
+  position:fixed;inset:0;z-index:500;
+  background:rgba(2,4,10,.93);
+  backdrop-filter:blur(12px);
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+#overlay.open{display:flex;}
 
-    .press-start{
-      margin-top:18px;
-      font-size:1.1rem;
-      color:#fde68a;
-      animation:blink 1s steps(1) infinite;
-    }
-    @keyframes blink{
-      0%,49%{opacity:1}
-      50%,100%{opacity:.2}
-    }
+.sec-panel{
+  width:min(860px,100%);max-height:90vh;
+  background:linear-gradient(135deg,rgba(5,9,18,.99),rgba(8,14,26,.99));
+  border:1px solid var(--border);
+  box-shadow:0 0 80px rgba(212,168,75,.12),0 0 160px rgba(0,0,0,.9),inset 0 1px 0 rgba(212,168,75,.2);
+  display:flex;flex-direction:column;overflow:hidden;
+  clip-path:polygon(0 0,calc(100% - 28px) 0,100% 28px,100% 100%,28px 100%,0 calc(100% - 28px));
+  animation:panelIn .4s cubic-bezier(.16,1,.3,1);
+}
+@keyframes panelIn{from{opacity:0;transform:scale(.96) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
 
-    .start-actions{
-      display:flex;
-      gap:12px;
-      justify-content:center;
-      flex-wrap:wrap;
-      margin-top:20px;
-    }
+.sec-head{
+  display:flex;align-items:center;gap:16px;
+  padding:22px 26px;
+  border-bottom:1px solid rgba(212,168,75,.18);
+  background:rgba(212,168,75,.03);
+  position:relative;flex-shrink:0;
+}
+.sec-head::after{
+  content:'';position:absolute;bottom:0;left:26px;right:26px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(212,168,75,.5),transparent);
+}
+.sec-icon{font-size:2rem;}
+.sec-head-txt{flex:1;}
+.sec-title{
+  font-family:'Cinzel Decorative',serif;
+  font-size:clamp(.9rem,2.5vw,1.5rem);
+  color:var(--gold-bright);letter-spacing:2px;
+  text-shadow:var(--glow);
+}
+.sec-sub{font-size:.75rem;color:var(--teal);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+.sec-close{
+  width:36px;height:36px;background:rgba(212,168,75,.07);
+  border:1px solid rgba(212,168,75,.3);color:var(--gold);
+  font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;flex-shrink:0;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,6px 100%,0 calc(100% - 6px));
+}
+.sec-close:hover{background:rgba(212,168,75,.2);box-shadow:var(--glow);}
 
-    .btn{
-      font-family:inherit;
-      font-size:1rem;
-      font-weight:bold;
-      color:#fff;
-      background:linear-gradient(180deg,#334155,#1e293b);
-      border:3px solid #e5e7eb;
-      padding:12px 20px;
-      cursor:pointer;
-      min-width:200px;
-      box-shadow:0 5px 0 #0f172a;
-      transition:transform .08s ease;
-    }
-    .btn:hover{transform:translateY(-2px)}
-    .btn.primary{
-      background:linear-gradient(180deg,#2563eb,#1d4ed8);
-    }
-    .btn.gold{
-      background:linear-gradient(180deg,#d97706,#b45309);
-    }
+.sec-body{padding:24px 26px;overflow-y:auto;flex:1;}
+.sec-body::-webkit-scrollbar{width:3px;}
+.sec-body::-webkit-scrollbar-thumb{background:rgba(212,168,75,.3);border-radius:2px;}
 
-    .small-note{
-      margin-top:18px;
-      text-align:center;
-      color:#cbd5e1;
-      line-height:1.6;
-      font-size:.95rem;
-    }
+/* Content atoms */
+.entry{
+  border:1px solid rgba(212,168,75,.12);background:rgba(255,255,255,.015);
+  padding:16px 18px;margin-bottom:14px;position:relative;transition:all .2s;
+}
+.entry::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--gold),transparent);}
+.entry:hover{background:rgba(212,168,75,.035);border-color:rgba(212,168,75,.28);}
+.entry-title{font-family:'Cinzel',serif;font-size:.98rem;color:var(--gold-bright);font-weight:700;margin-bottom:3px;}
+.entry-meta{font-size:.72rem;color:var(--teal);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.entry-text{font-size:.9rem;color:var(--cream);line-height:1.75;}
+.entry-text ul{padding-left:16px;}.entry-text li{margin-bottom:5px;}
+.entry-text strong{color:var(--gold-bright);}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.tag{font-size:.65rem;letter-spacing:1px;text-transform:uppercase;padding:2px 9px;
+  border:1px solid rgba(212,168,75,.22);color:var(--gold-dim);background:rgba(212,168,75,.04);font-family:'Cinzel',serif;}
+.tag.t{border-color:rgba(78,205,196,.28);color:#2a8a84;background:rgba(78,205,196,.04);}
 
-    /* ========== GAME SCREEN ========== */
-    #gameScreen{
-      flex-direction:column;
-      padding:12px;
-      gap:12px;
-    }
+.summary-quote{
+  font-family:'IM Fell English',serif;font-style:italic;
+  font-size:1.08rem;color:var(--cream);line-height:1.9;
+  border-left:3px solid var(--gold-dim);padding-left:16px;margin-bottom:18px;
+}
+.summary-quote strong{color:var(--gold-bright);font-style:normal;}
 
-    .top-ui{
-      display:flex;
-      gap:12px;
-      align-items:stretch;
-      min-height:92px;
-    }
+.attr-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:14px;}
+.attr-item{display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.018);border:1px solid rgba(212,168,75,.1);padding:10px 12px;}
+.attr-ic{font-size:1.2rem;}
+.attr-name{font-family:'Cinzel',serif;font-size:.66rem;color:rgba(240,230,204,.45);letter-spacing:1px;text-transform:uppercase;}
+.attr-val{font-size:.85rem;color:var(--gold-bright);font-weight:600;}
 
-    .status-bar,
-    .quest-bar,
-    .help-bar{
-      background:linear-gradient(180deg,var(--panel),#111426);
-      border:3px solid #dbeafe;
-      box-shadow:var(--shadow);
-      padding:10px 12px;
-    }
+.skill-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:9px;}
+.skill-card{background:rgba(255,255,255,.018);border:1px solid rgba(212,168,75,.12);
+  padding:12px;transition:all .2s;cursor:default;}
+.skill-card:hover{background:rgba(212,168,75,.04);border-color:rgba(212,168,75,.3);transform:translateY(-2px);}
+.sk-icon{font-size:1.5rem;margin-bottom:6px;}
+.sk-name{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold-bright);font-weight:700;margin-bottom:4px;}
+.sk-lv{font-size:.68rem;color:rgba(240,230,204,.4);margin-bottom:6px;letter-spacing:.5px;}
+.sk-bar-bg{height:3px;background:rgba(255,255,255,.05);border-radius:1px;overflow:hidden;}
+.sk-bar{height:100%;border-radius:1px;}
 
-    .status-bar{
-      flex:1.2;
-      min-width:280px;
-    }
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.contact-card{
+  border:1px solid rgba(212,168,75,.18);background:rgba(255,255,255,.018);
+  padding:16px;display:flex;align-items:center;gap:12px;
+  cursor:pointer;transition:all .2s;
+}
+.contact-card:hover{background:rgba(212,168,75,.07);border-color:var(--gold);box-shadow:var(--glow);transform:translateY(-2px);}
+.cc-icon{font-size:1.7rem;}
+.cc-label{font-family:'Cinzel',serif;font-size:.66rem;color:rgba(240,230,204,.4);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.cc-val{font-size:.85rem;color:var(--gold-bright);font-weight:600;}
 
-    .quest-bar{
-      flex:1.3;
-    }
+/* ── MOBILE DPAD ─────────────────────────────── */
+#dpad{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  z-index:200;display:none;
+  grid-template-columns:56px 56px 56px;
+  grid-template-rows:56px 56px 56px;
+  gap:4px;
+}
+@media(max-width:768px){#dpad{display:grid;}#statsPanel{width:160px;}#minimap{width:130px;height:130px;}}
+@media(max-width:480px){#statsPanel{display:none;}}
+.dpad-btn{
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(4,7,14,.85);border:1px solid rgba(212,168,75,.3);
+  color:var(--gold-bright);font-size:1.3rem;
+  cursor:pointer;user-select:none;-webkit-user-select:none;
+  transition:background .1s;border-radius:4px;
+}
+.dpad-btn:active{background:rgba(212,168,75,.2);}
 
-    .help-bar{
-      flex:.9;
-      min-width:240px;
-    }
+/* ── COMPASS ─────────────────────────────────── */
+#compass{
+  position:fixed;top:68px;right:14px;z-index:200;
+  width:52px;height:52px;
+  background:rgba(4,7,14,.88);
+  border:1px solid var(--border);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--glow);
+}
+#compassNeedle{
+  width:3px;height:22px;
+  background:linear-gradient(180deg,#e05050 50%,rgba(255,255,255,.2) 50%);
+  border-radius:2px;
+  transform-origin:50% 50%;
+  transition:transform .3s ease;
+}
 
-    .panel-title{
-      color:#fde68a;
-      font-size:.95rem;
-      margin-bottom:6px;
-      text-transform:uppercase;
-    }
+/* ── FLOAT NUMBERS ───────────────────────────── */
+.floatnum{
+  position:fixed;pointer-events:none;z-index:400;
+  font-family:'Cinzel Decorative',serif;font-size:1.1rem;font-weight:700;
+  animation:floatup 1.5s ease forwards;
+}
+@keyframes floatup{0%{opacity:1;transform:translateY(0);}100%{opacity:0;transform:translateY(-60px);}}
 
-    .status-grid{
-      display:grid;
-      grid-template-columns: repeat(2, minmax(0,1fr));
-      gap:4px 10px;
-      font-size:.95rem;
-      line-height:1.4;
-    }
+/* ── VIGNETTE ────────────────────────────────── */
+.vignette{
+  position:fixed;inset:0;pointer-events:none;z-index:100;
+  background:radial-gradient(ellipse at center,transparent 55%,rgba(2,4,10,.75) 100%);
+}
 
-    .quest-text,.help-text{
-      color:#dbeafe;
-      line-height:1.45;
-      font-size:.92rem;
-    }
-
-    .game-layout{
-      flex:1;
-      display:grid;
-      grid-template-columns: 1fr 340px;
-      gap:12px;
-      min-height:0;
-    }
-
-    .world-shell{
-      position:relative;
-      min-height:0;
-      background:linear-gradient(180deg,#0d1122,#101427);
-      border:4px solid #e2e8f0;
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-
-    .world{
-      position:relative;
-      width:100%;
-      height:100%;
-      background:
-        linear-gradient(rgba(255,255,255,.03) 2px, transparent 2px),
-        linear-gradient(90deg, rgba(255,255,255,.03) 2px, transparent 2px),
-        linear-gradient(180deg,#4da95d,#2f8f46);
-      background-size:48px 48px,48px 48px,cover;
-    }
-
-    .location-tag{
-      position:absolute;
-      left:10px;
-      top:10px;
-      z-index:10;
-      background:#0f172a;
-      border:3px solid #e5e7eb;
-      padding:8px 10px;
-      color:#fde68a;
-      box-shadow:0 5px 0 #00000033;
-      font-size:.95rem;
-    }
-
-    .location-sub{
-      color:#dbeafe;
-      font-size:.82rem;
-      margin-top:2px;
-    }
-
-    /* Tiles / scenery */
-    .water{
-      position:absolute;
-      background:
-        linear-gradient(180deg,var(--water),var(--water-2));
-      border:2px solid rgba(255,255,255,.15);
-      box-shadow:inset 0 0 0 2px rgba(255,255,255,.05);
-    }
-
-    .bridge{
-      position:absolute;
-      background:
-        repeating-linear-gradient(
-          90deg,
-          #8b5a2b 0 14px,
-          #6b4421 14px 18px
-        );
-      border:2px solid #5b3719;
-    }
-
-    .path{
-      position:absolute;
-      background:
-        repeating-linear-gradient(
-          45deg,
-          #c9a65c 0 18px,
-          #b6924e 18px 36px
-        );
-      border:2px solid rgba(0,0,0,.1);
-    }
-
-    .tree{
-      position:absolute;
-      width:54px;
-      height:62px;
-    }
-    .tree::before{
-      content:"";
-      position:absolute;
-      width:48px;
-      height:48px;
-      left:3px;
-      top:0;
-      background:radial-gradient(circle at 30% 30%, #3e9d51, var(--tree));
-      border:3px solid rgba(0,0,0,.15);
-      border-radius:8px;
-      box-shadow: inset -6px -8px 0 rgba(0,0,0,.12);
-    }
-    .tree::after{
-      content:"";
-      position:absolute;
-      width:14px;
-      height:18px;
-      left:20px;
-      bottom:0;
-      background:#6b4421;
-      border:2px solid rgba(0,0,0,.12);
-    }
-
-    .building{
-      position:absolute;
-      border:3px solid rgba(0,0,0,.18);
-      box-shadow: inset 0 -10px 0 rgba(0,0,0,.08);
-    }
-    .building .roof{
-      position:absolute;
-      left:-4px;
-      top:-18px;
-      width:calc(100% + 8px);
-      height:22px;
-      background:linear-gradient(180deg,#b14141,var(--roof));
-      border:3px solid rgba(0,0,0,.18);
-    }
-    .building .label{
-      position:absolute;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      text-align:center;
-      color:#0f172a;
-      font-weight:bold;
-      font-size:.9rem;
-      width:90%;
-      line-height:1.25;
-    }
-
-    .building.about{background:var(--wall)}
-    .building.experience{background:#d4f1dd}
-    .building.skills{background:#fde7a8}
-    .building.projects{background:#ddd6fe}
-    .building.education{background:#fecaca}
-    .building.contact{background:#a7f3d0}
-
-    .player{
-      position:absolute;
-      width:34px;
-      height:42px;
-      z-index:50;
-      transition:transform .06s linear;
-    }
-    .player .head{
-      position:absolute;
-      width:18px;
-      height:18px;
-      left:8px;
-      top:0;
-      background:#f4c99b;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:4px;
-    }
-    .player .hair{
-      position:absolute;
-      width:20px;
-      height:10px;
-      left:7px;
-      top:-1px;
-      background:#2f1a10;
-      border-radius:4px 4px 2px 2px;
-    }
-    .player .body{
-      position:absolute;
-      width:26px;
-      height:18px;
-      left:4px;
-      top:16px;
-      background:#2563eb;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:3px;
-    }
-    .player .legs{
-      position:absolute;
-      width:22px;
-      height:10px;
-      left:6px;
-      top:32px;
-      background:#334155;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:2px;
-    }
-
-    .npc{
-      position:absolute;
-      width:34px;
-      height:42px;
-      z-index:40;
-      cursor:pointer;
-      filter: drop-shadow(0 4px 0 rgba(0,0,0,.15));
-    }
-    .npc .head{
-      position:absolute;
-      width:18px;
-      height:18px;
-      left:8px;
-      top:0;
-      background:#f4c99b;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:4px;
-    }
-    .npc .body{
-      position:absolute;
-      width:26px;
-      height:18px;
-      left:4px;
-      top:16px;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:3px;
-    }
-    .npc .legs{
-      position:absolute;
-      width:22px;
-      height:10px;
-      left:6px;
-      top:32px;
-      background:#334155;
-      border:3px solid rgba(0,0,0,.18);
-      border-radius:2px;
-    }
-    .npc.blue .body{background:#0ea5e9}
-    .npc.green .body{background:#22c55e}
-    .npc.gold .body{background:#d97706}
-    .npc.purple .body{background:#7c3aed}
-    .npc.red .body{background:#dc2626}
-    .npc.teal .body{background:#0f766e}
-
-    .npc-name{
-      position:absolute;
-      left:50%;
-      transform:translateX(-50%);
-      bottom:46px;
-      white-space:nowrap;
-      background:#111827;
-      color:#fde68a;
-      border:2px solid #e5e7eb;
-      padding:2px 6px;
-      font-size:.75rem;
-      display:none;
-    }
-    .npc:hover .npc-name{display:block}
-
-    .sidebar{
-      min-height:0;
-      display:grid;
-      grid-template-rows: 1fr 1fr;
-      gap:12px;
-    }
-
-    .side-panel{
-      min-height:0;
-      background:linear-gradient(180deg,var(--panel),#111426);
-      border:3px solid #dbeafe;
-      box-shadow:var(--shadow);
-      padding:12px;
-      overflow:auto;
-    }
-
-    .menu-list{
-      display:grid;
-      gap:8px;
-      margin-top:8px;
-    }
-
-    .menu-btn{
-      width:100%;
-      font-family:inherit;
-      text-align:left;
-      padding:10px 12px;
-      color:#fff;
-      background:linear-gradient(180deg,#334155,#1f2937);
-      border:2px solid #e2e8f0;
-      cursor:pointer;
-      font-size:.95rem;
-      box-shadow:0 4px 0 #00000033;
-    }
-
-    .menu-btn:hover{
-      background:linear-gradient(180deg,#475569,#334155);
-    }
-
-    .relics, .attributes, .quests{
-      display:grid;
-      gap:8px;
-      margin-top:8px;
-      color:#e2e8f0;
-      font-size:.92rem;
-    }
-
-    .badge{
-      display:inline-block;
-      background:#0f172a;
-      color:#fde68a;
-      border:2px solid #e5e7eb;
-      padding:2px 8px;
-      margin-bottom:4px;
-      font-size:.82rem;
-    }
-
-    .quest-item{
-      border:2px solid rgba(255,255,255,.15);
-      padding:8px;
-      background:rgba(255,255,255,.03);
-      line-height:1.45;
-    }
-
-    /* Dialog */
-    .dialog-overlay{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.45);
-      display:none;
-      align-items:flex-end;
-      justify-content:center;
-      padding:20px;
-      z-index:200;
-    }
-    .dialog-overlay.active{display:flex}
-
-    .dialog-box{
-      width:min(1100px,100%);
-      background:linear-gradient(180deg,#1a1f3d,#0f1328);
-      border:4px solid #e2e8f0;
-      box-shadow:var(--shadow);
-      padding:16px;
-      display:grid;
-      grid-template-columns: 190px 1fr;
-      gap:16px;
-    }
-
-    .portrait{
-      min-height:180px;
-      background:
-        linear-gradient(180deg, rgba(125,211,252,.1), rgba(250,204,21,.05)),
-        #151933;
-      border:3px solid #cbd5e1;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:14px;
-    }
-
-    .portrait .big-sprite{
-      position:relative;
-      width:72px;
-      height:94px;
-      margin-bottom:12px;
-    }
-    .portrait .big-sprite .head{
-      position:absolute;width:40px;height:40px;left:16px;top:0;background:#f4c99b;border:4px solid rgba(0,0,0,.18)
-    }
-    .portrait .big-sprite .hair{
-      position:absolute;width:44px;height:18px;left:14px;top:-2px;background:#2f1a10
-    }
-    .portrait .big-sprite .body{
-      position:absolute;width:56px;height:30px;left:8px;top:36px;border:4px solid rgba(0,0,0,.18)
-    }
-    .portrait .big-sprite .legs{
-      position:absolute;width:48px;height:20px;left:12px;top:68px;background:#334155;border:4px solid rgba(0,0,0,.18)
-    }
-
-    .portrait .name{
-      font-weight:bold;
-      color:#fde68a;
-      margin-bottom:6px;
-    }
-
-    .portrait .role{
-      color:#dbeafe;
-      font-size:.9rem;
-      line-height:1.45;
-    }
-
-    .dialog-content{
-      display:flex;
-      flex-direction:column;
-      min-height:220px;
-    }
-
-    .dialog-title{
-      color:#fde68a;
-      font-size:1.1rem;
-      margin-bottom:10px;
-    }
-
-    .dialog-text{
-      color:#eef2ff;
-      line-height:1.72;
-      font-size:1rem;
-      overflow:auto;
-      padding-right:6px;
-    }
-
-    .dialog-text p{margin-bottom:12px}
-    .dialog-text ul{padding-left:20px;margin-bottom:12px}
-    .dialog-text li{margin-bottom:8px}
-
-    .dialog-actions{
-      margin-top:12px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .footnote{
-      margin-top:10px;
-      color:#cbd5e1;
-      font-size:.88rem;
-      line-height:1.5;
-    }
-
-    .controls-mobile{
-      display:none;
-      position:absolute;
-      right:12px;
-      bottom:12px;
-      z-index:120;
-      grid-template-columns: 62px 62px 62px;
-      gap:8px;
-    }
-
-    .controls-mobile button{
-      width:62px;height:62px;
-      font-family:inherit;
-      font-size:1.2rem;
-      color:#fff;
-      background:#0f172a;
-      border:3px solid #e5e7eb;
-      box-shadow:0 4px 0 #00000033;
-      cursor:pointer;
-    }
-
-    .hint-bubble{
-      position:absolute;
-      left:50%;
-      bottom:20px;
-      transform:translateX(-50%);
-      z-index:110;
-      background:#111827;
-      border:3px solid #e5e7eb;
-      padding:8px 12px;
-      color:#fde68a;
-      display:none;
-      box-shadow:0 4px 0 #00000033;
-      text-align:center;
-    }
-    .hint-bubble.active{display:block}
-
-    @media (max-width: 1100px){
-      .game-layout{
-        grid-template-columns:1fr;
-      }
-      .sidebar{
-        grid-template-columns:1fr 1fr;
-        grid-template-rows:none;
-      }
-      .world-shell{min-height:480px}
-    }
-
-    @media (max-width: 860px){
-      #gameScreen{
-        padding:8px;
-      }
-      .top-ui{
-        display:grid;
-        grid-template-columns:1fr;
-      }
-      .sidebar{
-        grid-template-columns:1fr;
-      }
-      .dialog-box{
-        grid-template-columns:1fr;
-      }
-      .controls-mobile{display:grid}
-      .world-shell{min-height:420px}
-      .help-bar{display:none}
-    }
-
-    @media (max-width: 540px){
-      .start-card{padding:16px}
-      .logo{padding:18px 12px}
-      .world-shell{min-height:390px}
-      .status-grid{
-        grid-template-columns:1fr;
-      }
-    }
-  </style>
+/* ── CURSOR ──────────────────────────────────── */
+body{cursor:none;}
+#cur{position:fixed;width:18px;height:18px;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+#cur::before{content:'';position:absolute;inset:0;border:2px solid var(--gold);
+  clip-path:polygon(0 0,calc(100% - 4px) 0,100% 4px,100% 100%,4px 100%,0 calc(100% - 4px));
+  animation:curpulse 2s ease infinite;}
+#cur::after{content:'';position:absolute;width:4px;height:4px;top:50%;left:50%;
+  transform:translate(-50%,-50%);background:var(--gold-bright);border-radius:50%;}
+@keyframes curpulse{0%,100%{opacity:1;}50%{opacity:.6;}}
+</style>
 </head>
 <body>
 
-  <!-- START -->
-  <section id="startScreen" class="screen active">
-    <div class="stars"></div>
+<!-- Cursor -->
+<div id="cur"></div>
+<div class="vignette"></div>
 
-    <div class="start-card pixel-frame">
-      <div class="logo pixel-frame">
-        <h1>WAGNER QUEST</h1>
-        <p>
-          Um currículo interativo em estilo <strong>JRPG retrô</strong>, inspirado na atmosfera
-          dos clássicos antigos. Explore o reino profissional de <strong>Wagner Douglas Ramos da Silva</strong>,
-          converse com NPCs, visite construções temáticas e descubra experiência, habilidades, projetos,
-          formação e contato.
-        </p>
-        <div class="press-start">PRESS START</div>
-      </div>
+<!-- Loading -->
+<div id="loading">
+  <div class="load-title">WAGNER DOUGLAS</div>
+  <div class="load-sub">Project Strategist · PMO · Data · Automation</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="loadBar"></div></div>
+  <div class="load-tip" id="loadTip">Initializing 3D world...</div>
+</div>
 
-      <div class="start-actions">
-        <button class="btn primary" onclick="startGame()">Novo Jogo</button>
-        <button class="btn gold" onclick="openManual()">Como Jogar</button>
-        <button class="btn" onclick="openDirectProfile()">Ver Resumo Direto</button>
-      </div>
+<!-- 3D Canvas -->
+<canvas id="c" tabindex="0"></canvas>
 
-      <div class="small-note">
-        Desktop: <strong>WASD</strong> ou <strong>setas</strong> para andar, <strong>E</strong> ou <strong>Enter</strong> para interagir.<br>
-        Mobile: use os botões na tela. Tudo está em um único HTML para facilitar o teste e o GitHub Pages.
-      </div>
+<!-- Portrait Canvas (hidden, used for texture) -->
+<canvas id="portraitCanvas" style="display:none;width:200px;height:200px;"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-brand">⚔ WAGNER QUEST</div>
+  <div class="hud-sep"></div>
+  <div class="hud-controls">
+    <span class="hud-key">W A S D</span> mover &nbsp;|&nbsp;
+    <span class="hud-key">Mouse</span> câmera &nbsp;|&nbsp;
+    <span class="hud-key">E / Enter</span> interagir &nbsp;|&nbsp;
+    <span class="hud-key">Esc</span> fechar
+  </div>
+  <div class="hud-sep"></div>
+  <div class="hud-badge">
+    <div class="hexbadge">W</div>
+    <div>PROJECT<br>STRATEGIST</div>
+  </div>
+</div>
+
+<!-- Stats Panel -->
+<div id="statsPanel">
+  <div class="sp-portrait"><canvas id="portraitCanvas" width="200" height="90"></canvas></div>
+  <div class="sp-name">Wagner Douglas</div>
+  <div class="sp-role">Project Strategist</div>
+  <div class="sp-stats">
+    <div>
+      <div class="sp-stat-label"><span>PMO</span><span>95</span></div>
+      <div class="sp-bar-bg"><div class="sp-bar g" id="sb1" style="width:0%"></div></div>
     </div>
-  </section>
-
-  <!-- GAME -->
-  <section id="gameScreen" class="screen">
-    <div class="top-ui">
-      <div class="status-bar">
-        <div class="panel-title">Status do Herói</div>
-        <div class="status-grid">
-          <div><strong>Nome:</strong> Wagner Douglas Ramos da Silva</div>
-          <div><strong>Classe:</strong> Project Strategist</div>
-          <div><strong>Nível:</strong> PMO + Dados + Processos</div>
-          <div><strong>Especialização:</strong> Automação e Reporting</div>
-          <div><strong>Relics:</strong> Power BI, Excel, Python</div>
-          <div><strong>Missão:</strong> Transformar dados em decisão</div>
-        </div>
-      </div>
-
-      <div class="quest-bar">
-        <div class="panel-title">Quest Principal</div>
-        <div class="quest-text">
-          Explore o mapa e descubra a jornada profissional do candidato. Cada área representa uma parte do currículo:
-          <strong>Resumo, Experiência, Skills, Projetos, Formação e Contato</strong>.
-        </div>
-      </div>
-
-      <div class="help-bar">
-        <div class="panel-title">Comandos</div>
-        <div class="help-text">
-          <strong>Movimento:</strong> WASD / Setas<br>
-          <strong>Interagir:</strong> E / Enter<br>
-          <strong>Fechar diálogo:</strong> Esc<br>
-          <strong>Menu lateral:</strong> acesso direto às seções
-        </div>
-      </div>
+    <div>
+      <div class="sp-stat-label"><span>Analytics</span><span>88</span></div>
+      <div class="sp-bar-bg"><div class="sp-bar t" id="sb2" style="width:0%"></div></div>
     </div>
-
-    <div class="game-layout">
-      <div class="world-shell">
-        <div class="location-tag">
-          Reino dos Projetos
-          <div class="location-sub">Currículo JRPG Interativo</div>
-        </div>
-
-        <div id="world" class="world">
-          <!-- scenery -->
-          <div class="water" style="left:0; top:0; width:14%; height:100%;"></div>
-          <div class="water" style="right:0; top:0; width:12%; height:100%;"></div>
-          <div class="bridge" style="left:12%; top:42%; width:6%; height:10%;"></div>
-          <div class="bridge" style="right:11%; top:60%; width:6%; height:10%;"></div>
-
-          <div class="path" style="left:15%; top:46%; width:70%; height:8%;"></div>
-          <div class="path" style="left:47%; top:15%; width:7%; height:70%;"></div>
-
-          <!-- trees -->
-          <div class="tree" style="left:18%; top:14%"></div>
-          <div class="tree" style="left:25%; top:10%"></div>
-          <div class="tree" style="left:81%; top:18%"></div>
-          <div class="tree" style="left:72%; top:9%"></div>
-          <div class="tree" style="left:22%; top:72%"></div>
-          <div class="tree" style="left:30%; top:79%"></div>
-          <div class="tree" style="left:75%; top:76%"></div>
-          <div class="tree" style="left:66%; top:80%"></div>
-
-          <!-- buildings -->
-          <div class="building about" data-zone="about" style="left:20%; top:22%; width:14%; height:14%;">
-            <div class="roof"></div>
-            <div class="label">Vila Inicial<br>Resumo</div>
-          </div>
-
-          <div class="building experience" data-zone="experience" style="left:58%; top:21%; width:16%; height:16%;">
-            <div class="roof"></div>
-            <div class="label">Guilda dos<br>Projetos</div>
-          </div>
-
-          <div class="building skills" data-zone="skills" style="left:74%; top:45%; width:12%; height:14%;">
-            <div class="roof"></div>
-            <div class="label">Torre das<br>Skills</div>
-          </div>
-
-          <div class="building projects" data-zone="projects" style="left:21%; top:59%; width:14%; height:15%;">
-            <div class="roof"></div>
-            <div class="label">Quadro de<br>Missões</div>
-          </div>
-
-          <div class="building education" data-zone="education" style="left:58%; top:62%; width:16%; height:15%;">
-            <div class="roof"></div>
-            <div class="label">Arquivo<br>Real</div>
-          </div>
-
-          <div class="building contact" data-zone="contact" style="left:40%; top:73%; width:14%; height:12%;">
-            <div class="roof"></div>
-            <div class="label">Portal Final<br>Contato</div>
-          </div>
-
-          <!-- NPCs -->
-          <div class="npc blue" data-key="about" style="left:26%; top:39%">
-            <div class="npc-name">Ancião da Jornada</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div class="npc green" data-key="experience" style="left:61%; top:41%">
-            <div class="npc-name">Mestre do PMO</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div class="npc gold" data-key="skills" style="left:76%; top:61%">
-            <div class="npc-name">Guardião das Skills</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div class="npc purple" data-key="projects" style="left:30%; top:77%">
-            <div class="npc-name">Escriba das Missões</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div class="npc red" data-key="education" style="left:62%; top:79%">
-            <div class="npc-name">Bibliotecário Real</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div class="npc teal" data-key="contact" style="left:45%; top:63%">
-            <div class="npc-name">Guardião do Portal</div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <!-- player -->
-          <div id="player" class="player">
-            <div class="hair"></div>
-            <div class="head"></div>
-            <div class="body"></div>
-            <div class="legs"></div>
-          </div>
-
-          <div id="hintBubble" class="hint-bubble">Pressione E para interagir</div>
-
-          <!-- mobile controls -->
-          <div class="controls-mobile">
-            <div></div>
-            <button onclick="movePlayer('up')">▲</button>
-            <div></div>
-            <button onclick="movePlayer('left')">◀</button>
-            <button onclick="interact()">●</button>
-            <button onclick="movePlayer('right')">▶</button>
-            <div></div>
-            <button onclick="movePlayer('down')">▼</button>
-            <div></div>
-          </div>
-        </div>
-      </div>
-
-      <aside class="sidebar">
-        <div class="side-panel">
-          <div class="panel-title">Menu do Reino</div>
-          <div class="menu-list">
-            <button class="menu-btn" onclick="openSection('about')">Resumo Profissional</button>
-            <button class="menu-btn" onclick="openSection('experience')">Experiência</button>
-            <button class="menu-btn" onclick="openSection('skills')">Habilidades</button>
-            <button class="menu-btn" onclick="openSection('projects')">Projetos e Entregas</button>
-            <button class="menu-btn" onclick="openSection('education')">Formação</button>
-            <button class="menu-btn" onclick="openSection('contact')">Contato</button>
-            <button class="menu-btn" onclick="openDirectProfile()">Resumo Executivo</button>
-            <button class="menu-btn" onclick="backToTitle()">Voltar ao Título</button>
-          </div>
-
-          <div class="panel-title" style="margin-top:14px;">Relics</div>
-          <div class="relics">
-            <div><span class="badge">Lendário</span> Power BI</div>
-            <div><span class="badge">Lendário</span> Excel Avançado</div>
-            <div><span class="badge">Raro</span> Python</div>
-            <div><span class="badge">Raro</span> Microsoft Project</div>
-            <div><span class="badge">Raro</span> Visio / Processos</div>
-          </div>
-        </div>
-
-        <div class="side-panel">
-          <div class="panel-title">Atributos</div>
-          <div class="attributes">
-            <div><strong>Planning:</strong> forte</div>
-            <div><strong>Reporting:</strong> forte</div>
-            <div><strong>Automation:</strong> forte</div>
-            <div><strong>Governance:</strong> forte</div>
-            <div><strong>Process Design:</strong> forte</div>
-            <div><strong>Executive Communication:</strong> forte</div>
-          </div>
-
-          <div class="panel-title" style="margin-top:14px;">Quests Concluídas</div>
-          <div class="quests">
-            <div class="quest-item">Estruturar controles e relatórios integrados.</div>
-            <div class="quest-item">Reduzir retrabalho com padronização e automação.</div>
-            <div class="quest-item">Transformar dados em informação gerencial.</div>
-            <div class="quest-item">Apoiar tomada de decisão com dashboards e status.</div>
-          </div>
-        </div>
-      </aside>
+    <div>
+      <div class="sp-stat-label"><span>Automation</span><span>85</span></div>
+      <div class="sp-bar-bg"><div class="sp-bar b" id="sb3" style="width:0%"></div></div>
     </div>
-  </section>
-
-  <!-- DIALOG -->
-  <div id="dialogOverlay" class="dialog-overlay">
-    <div class="dialog-box">
-      <div class="portrait">
-        <div class="big-sprite">
-          <div class="hair"></div>
-          <div class="head"></div>
-          <div id="portraitBody" class="body" style="background:#2563eb;"></div>
-          <div class="legs"></div>
-        </div>
-        <div id="portraitName" class="name">Wagner</div>
-        <div id="portraitRole" class="role">Estrategista de Projetos</div>
-      </div>
-
-      <div class="dialog-content">
-        <div id="dialogTitle" class="dialog-title">Título</div>
-        <div id="dialogText" class="dialog-text"></div>
-        <div class="dialog-actions">
-          <button class="btn primary" onclick="closeDialog()">Fechar</button>
-          <button class="btn" onclick="openDirectProfile()">Resumo Executivo</button>
-        </div>
-        <div class="footnote">
-          Este é um protótipo funcional em HTML, CSS e JS puros. Depois você pode evoluir para sprites melhores,
-          efeitos de áudio, mapa maior, transições e links reais.
-        </div>
-      </div>
+    <div>
+      <div class="sp-stat-label"><span>Process</span><span>90</span></div>
+      <div class="sp-bar-bg"><div class="sp-bar r" id="sb4" style="width:0%"></div></div>
+    </div>
+    <div>
+      <div class="sp-stat-label"><span>Exec Comm.</span><span>87</span></div>
+      <div class="sp-bar-bg"><div class="sp-bar g" id="sb5" style="width:0%"></div></div>
     </div>
   </div>
+  <div class="sp-items">
+    <div class="sp-item" data-t="Power BI">📊</div>
+    <div class="sp-item" data-t="Excel Avançado">📋</div>
+    <div class="sp-item" data-t="Python">🐍</div>
+    <div class="sp-item" data-t="MS Project">📅</div>
+    <div class="sp-item" data-t="Visio / BPMN">🗺</div>
+    <div class="sp-item" data-t="MBA USP">🎓</div>
+  </div>
+</div>
 
-  <script>
-    const startScreen = document.getElementById("startScreen");
-    const gameScreen = document.getElementById("gameScreen");
-    const world = document.getElementById("world");
-    const player = document.getElementById("player");
-    const hintBubble = document.getElementById("hintBubble");
+<!-- Compass -->
+<div id="compass"><div id="compassNeedle"></div></div>
 
-    const dialogOverlay = document.getElementById("dialogOverlay");
-    const dialogTitle = document.getElementById("dialogTitle");
-    const dialogText = document.getElementById("dialogText");
-    const portraitName = document.getElementById("portraitName");
-    const portraitRole = document.getElementById("portraitRole");
-    const portraitBody = document.getElementById("portraitBody");
+<!-- Minimap -->
+<div id="minimap">
+  <div class="minimap-label">Mapa</div>
+  <canvas id="minimapCanvas"></canvas>
+</div>
 
-    const npcs = [...document.querySelectorAll(".npc")];
-    const buildings = [...document.querySelectorAll(".building")];
+<!-- Interaction prompt -->
+<div id="prompt"></div>
 
-    const state = {
-      x: 360,
-      y: 250,
-      step: 16,
-      canMove: true,
-      currentInteractable: null
-    };
+<!-- Mobile DPad -->
+<div id="dpad">
+  <div></div>
+  <div class="dpad-btn" id="dU">▲</div>
+  <div></div>
+  <div class="dpad-btn" id="dL">◀</div>
+  <div class="dpad-btn" id="dI">●</div>
+  <div class="dpad-btn" id="dR">▶</div>
+  <div></div>
+  <div class="dpad-btn" id="dD">▼</div>
+  <div></div>
+</div>
 
-    const sections = {
-      about: {
-        color: "#0ea5e9",
-        speaker: "Ancião da Jornada",
-        role: "Guardião do Resumo Profissional",
-        title: "Vila Inicial — Resumo Profissional",
-        html: `
-          <p>
-            Bem-vindo, aventureiro. Aqui começa a jornada de <strong>Wagner Douglas Ramos da Silva</strong>,
-            profissional com atuação em <strong>PMO, gestão de projetos, análise de dados, automação e melhoria de processos</strong>.
-          </p>
-          <p>
-            Seu diferencial está em conectar <strong>organização, governança, tecnologia e leitura analítica</strong>
-            para transformar controles, relatórios e fluxos operacionais em soluções mais confiáveis e úteis para a tomada de decisão.
-          </p>
-          <p>
-            Em vez de apenas acompanhar atividades, sua atuação busca <strong>dar clareza ao cenário</strong>,
-            estruturar informações, reduzir ruído, apoiar priorização e melhorar a comunicação entre áreas técnicas e executivas.
-          </p>
-        `
-      },
-      experience: {
-        color: "#22c55e",
-        speaker: "Mestre do PMO",
-        role: "Guardião da Experiência",
-        title: "Guilda dos Projetos — Experiência",
-        html: `
-          <p><strong>Exemplo de narrativa profissional para a seção de experiência:</strong></p>
-          <ul>
-            <li>Atuação em rotinas de <strong>PMO</strong>, acompanhamento de cronogramas, status de iniciativas e controle de entregas.</li>
-            <li>Estruturação e padronização de planilhas, controles e relatórios gerenciais para áreas com necessidades distintas.</li>
-            <li>Suporte ao acompanhamento <strong>físico-financeiro</strong>, leitura de dados e organização de informações para reporting executivo.</li>
-            <li>Integração entre áreas técnicas e gestoras, facilitando comunicação, alinhamento e visibilidade do andamento dos projetos.</li>
-            <li>Melhoria de processos com foco em <strong>confiabilidade da informação, redução de retrabalho e ganho de eficiência</strong>.</li>
-          </ul>
-          <p>
-            Depois você pode substituir este bloco pelos seus cargos, empresas, períodos e principais entregas com resultados concretos.
-          </p>
-        `
-      },
-      skills: {
-        color: "#d97706",
-        speaker: "Guardião das Skills",
-        role: "Mestre dos Atributos Técnicos",
-        title: "Torre das Skills — Habilidades",
-        html: `
-          <p><strong>Atributos centrais do personagem:</strong></p>
-          <ul>
-            <li><strong>Gestão de Projetos:</strong> planejamento, acompanhamento, organização de entregas, status e governança.</li>
-            <li><strong>Análise de Dados:</strong> leitura crítica, estruturação de indicadores e transformação de dados em informação.</li>
-            <li><strong>Automação:</strong> racionalização de tarefas manuais com Excel, Power Query, VBA ou Python.</li>
-            <li><strong>Business Intelligence:</strong> criação de dashboards, painéis executivos e visões analíticas em Power BI.</li>
-            <li><strong>Mapeamento e Melhoria de Processos:</strong> documentação, padronização, lógica operacional e ganho de eficiência.</li>
-            <li><strong>Comunicação Executiva:</strong> organização de conteúdo para gestores e suporte à tomada de decisão.</li>
-          </ul>
-          <p><strong>Relics lendárias:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</p>
-        `
-      },
-      projects: {
-        color: "#7c3aed",
-        speaker: "Escriba das Missões",
-        role: "Cronista dos Projetos",
-        title: "Quadro de Missões — Projetos e Entregas",
-        html: `
-          <p><strong>Missões concluídas que combinam com o seu perfil:</strong></p>
-          <ul>
-            <li>Estruturar planilhas e controles integrados com maior padronização e confiabilidade.</li>
-            <li>Automatizar rotinas operacionais, reduzindo esforço manual e inconsistências recorrentes.</li>
-            <li>Construir dashboards e visões gerenciais para acompanhamento de status, indicadores e performance.</li>
-            <li>Organizar fluxos e informações para facilitar análise, acompanhamento e comunicação entre áreas.</li>
-            <li>Transformar necessidades difusas das áreas em soluções mais claras, utilizáveis e sustentáveis.</li>
-          </ul>
-          <p>
-            Uma versão mais forte desta seção pode usar estrutura <strong>Desafio → Ação → Ferramenta → Resultado</strong>,
-            quase como “quests” completas do jogo.
-          </p>
-        `
-      },
-      education: {
-        color: "#dc2626",
-        speaker: "Bibliotecário Real",
-        role: "Guardião do Conhecimento",
-        title: "Arquivo Real — Formação",
-        html: `
-          <ul>
-            <li><strong>MBA em Gestão de Projetos</strong> — FEARP USP <em>(cursando)</em></li>
-            <li><strong>Pós-graduação em Gestão de Projetos</strong> — Descomplica Faculdade Digital</li>
-            <li><strong>Bacharelado em Engenharia Civil</strong></li>
-          </ul>
-          <p>
-            Aqui também entram trilhas e cursos complementares, como Power BI, Excel avançado, Python,
-            automação, análise de dados, processos e governança.
-          </p>
-          <p>
-            Para currículo, essa combinação mostra uma base técnica sólida somada a uma especialização voltada a gestão, organização e resultado.
-          </p>
-        `
-      },
-      contact: {
-        color: "#0f766e",
-        speaker: "Guardião do Portal",
-        role: "Mestre do Contato Final",
-        title: "Portal Final — Contato",
-        html: `
-          <p>Chegou ao portal final. Aqui estão os dados do aventureiro:</p>
-          <ul>
-            <li><strong>Nome:</strong> Wagner Douglas Ramos da Silva</li>
-            <li><strong>E-mail:</strong> wagnerramoseng@gmail.com</li>
-            <li><strong>LinkedIn:</strong> linkedin.com/in/engwagnerramos</li>
-            <li><strong>GitHub:</strong> github.com/Ramoswagner</li>
-          </ul>
-          <p>
-            Depois você pode trocar isso por botões reais clicáveis, incluindo:
-            <strong>LinkedIn</strong>, <strong>GitHub</strong>, <strong>currículo em PDF</strong> e até um
-            <strong>botão para WhatsApp</strong>, se fizer sentido para seu portfólio.
-          </p>
-        `
-      },
-      direct: {
-        color: "#2563eb",
-        speaker: "Menu do Reino",
-        role: "Resumo Executivo",
-        title: "Resumo Executivo — Perfil Profissional",
-        html: `
-          <p><strong>Wagner Douglas Ramos da Silva</strong> é um profissional com atuação voltada a
-          <strong>PMO, gestão de projetos, dados, automação e melhoria de processos</strong>.</p>
+<!-- Section Overlay -->
+<div id="overlay">
+  <div class="sec-panel">
+    <div class="sec-head">
+      <div class="sec-icon" id="secIcon">🏰</div>
+      <div class="sec-head-txt">
+        <div class="sec-title" id="secTitle">TÍTULO</div>
+        <div class="sec-sub" id="secSub">subtítulo</div>
+      </div>
+      <button class="sec-close" onclick="closeSec()">✕</button>
+    </div>
+    <div class="sec-body" id="secBody"></div>
+  </div>
+</div>
 
-          <p>
-            Sua proposta de valor está em unir visão analítica, organização e ferramentas tecnológicas para estruturar
-            controles, padronizar informações, reduzir retrabalho e apoiar a tomada de decisão.
-          </p>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  CURSOR
+// ══════════════════════════════════════════════════════════════
+const cur = document.getElementById('cur');
+document.addEventListener('mousemove', e => { cur.style.left=e.clientX+'px'; cur.style.top=e.clientY+'px'; });
 
-          <ul>
-            <li><strong>Foco:</strong> governança, acompanhamento, reporting, organização de informações e eficiência operacional.</li>
-            <li><strong>Ferramentas:</strong> Power BI, Excel Avançado, Python, MS Project, Visio.</li>
-            <li><strong>Diferenciais:</strong> leitura crítica, construção de soluções práticas, interface entre áreas e mentalidade de melhoria contínua.</li>
-            <li><strong>Formação:</strong> Engenharia Civil + especializações em Gestão de Projetos.</li>
-          </ul>
+// ══════════════════════════════════════════════════════════════
+//  LOADING
+// ══════════════════════════════════════════════════════════════
+const tips = [
+  'Initializing 3D world...',
+  'Building medieval village...',
+  'Placing experience towers...',
+  'Spawning skill crystals...',
+  'Lighting torches...',
+  'Populating quest boards...',
+  'Hero entering the realm...'
+];
+let loadPct = 0;
+const loadBar = document.getElementById('loadBar');
+const loadTip = document.getElementById('loadTip');
+function advLoad(){
+  loadPct += Math.random()*18 + 7;
+  if(loadPct>100) loadPct=100;
+  loadBar.style.width = loadPct+'%';
+  loadTip.textContent = tips[Math.floor((loadPct/100)*(tips.length-1))];
+  if(loadPct < 100) setTimeout(advLoad, 180+Math.random()*140);
+  else setTimeout(launch, 600);
+}
+setTimeout(advLoad, 400);
 
-          <p>
-            Em linguagem de recrutador: perfil com boa aderência a funções como
-            <strong>Analista de Projetos, PMO, Planejamento, Processos, Governança e Dados aplicados à gestão</strong>.
-          </p>
-        `
-      },
-      manual: {
-        color: "#b45309",
-        speaker: "Guia do Reino",
-        role: "Manual do Aventureiro",
-        title: "Como Jogar",
-        html: `
-          <ul>
-            <li>Use <strong>WASD</strong> ou as <strong>setas</strong> para mover o personagem.</li>
-            <li>Aproxime-se de um <strong>NPC</strong> ou construção temática.</li>
-            <li>Pressione <strong>E</strong> ou <strong>Enter</strong> para interagir.</li>
-            <li>No celular, use os botões na tela.</li>
-            <li>Também é possível abrir cada seção direto pelo <strong>menu lateral</strong>.</li>
-          </ul>
-          <p>
-            Este protótipo foi pensado para funcionar como um currículo-jogo leve,
-            fácil de publicar no <strong>GitHub Pages</strong> e simples de evoluir depois.
-          </p>
-        `
+function launch(){
+  const ld = document.getElementById('loading');
+  ld.style.transition='opacity .9s ease';
+  ld.style.opacity='0';
+  setTimeout(()=>{
+    ld.style.display='none';
+    document.getElementById('c').style.display='block';
+    initGame();
+  }, 900);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SECTIONS DATA
+// ══════════════════════════════════════════════════════════════
+const SECTIONS = {
+  about:{
+    icon:'🧭',title:'RESUMO PROFISSIONAL',sub:'Hero Overview · Project Strategist',
+    html:`<p class="summary-quote"><strong>Wagner Douglas Ramos da Silva</strong> é um profissional com atuação em <strong>PMO, gestão de projetos, análise de dados, automação e melhoria de processos</strong>. Seu diferencial está em conectar organização, governança, tecnologia e leitura analítica para transformar controles, relatórios e fluxos operacionais em soluções mais confiáveis e úteis para a tomada de decisão.</p>
+    <p class="summary-quote">Em vez de apenas acompanhar atividades, sua atuação busca <strong>dar clareza ao cenário</strong>, estruturar informações, reduzir ruído, apoiar priorização e melhorar a comunicação entre áreas técnicas e executivas.</p>
+    <div class="attr-grid">
+      <div class="attr-item"><div class="attr-ic">🏛</div><div><div class="attr-name">Classe</div><div class="attr-val">Project Strategist</div></div></div>
+      <div class="attr-item"><div class="attr-ic">⚡</div><div><div class="attr-name">Especialização</div><div class="attr-val">PMO + Dados + Auto.</div></div></div>
+      <div class="attr-item"><div class="attr-ic">🎯</div><div><div class="attr-name">Missão</div><div class="attr-val">Dados → Decisão</div></div></div>
+      <div class="attr-item"><div class="attr-ic">🌐</div><div><div class="attr-name">Localização</div><div class="attr-val">Brasil</div></div></div>
+    </div>`
+  },
+  experience:{
+    icon:'⚔️',title:'EXPERIÊNCIA',sub:'Battle History · Missões Completadas',
+    html:`
+    <div class="entry"><div class="entry-title">PMO e Controle de Projetos</div><div class="entry-meta">Gestão de Projetos · Reporting</div>
+    <div class="entry-text"><ul>
+      <li>Rotinas de PMO, acompanhamento de cronogramas e status de iniciativas.</li>
+      <li>Estruturação e padronização de planilhas e relatórios gerenciais.</li>
+      <li>Suporte ao acompanhamento <strong>físico-financeiro</strong> e reporting executivo.</li>
+      <li>Integração entre áreas técnicas e gestoras para visibilidade dos projetos.</li>
+    </ul></div>
+    <div class="tags"><span class="tag">PMO</span><span class="tag">Cronograma</span><span class="tag t">MS Project</span></div></div>
+    <div class="entry"><div class="entry-title">Análise de Dados e Business Intelligence</div><div class="entry-meta">BI · Dashboards · Analytics</div>
+    <div class="entry-text"><ul>
+      <li>Construção de <strong>dashboards e painéis executivos</strong> para acompanhamento de indicadores.</li>
+      <li>Transformação de dados brutos em informação gerencial relevante.</li>
+      <li>Automação com Excel, Power Query, VBA e Python.</li>
+    </ul></div>
+    <div class="tags"><span class="tag">Power BI</span><span class="tag">Excel</span><span class="tag t">Python</span></div></div>
+    <div class="entry"><div class="entry-title">Melhoria de Processos e Governança</div><div class="entry-meta">Processos · Padronização · BPMN</div>
+    <div class="entry-text"><ul>
+      <li>Mapeamento, documentação e redesenho de processos operacionais.</li>
+      <li>Implantação de controles que aumentam confiabilidade e reduzem inconsistências.</li>
+      <li>Interface entre times técnicos e executivos.</li>
+    </ul></div>
+    <div class="tags"><span class="tag">Visio</span><span class="tag t">BPMN</span><span class="tag">Governança</span></div></div>`
+  },
+  skills:{
+    icon:'🔮',title:'HABILIDADES',sub:'Skill Tree · Abilities Unlocked',
+    html:`<div class="skill-grid">
+    <div class="skill-card"><div class="sk-icon">📊</div><div class="sk-name">Power BI</div><div class="sk-lv">Lendário · Dashboards</div><div class="sk-bar-bg"><div class="sk-bar" style="width:95%;background:linear-gradient(90deg,#6b5220,#f5cc6e)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">📋</div><div class="sk-name">Excel Avançado</div><div class="sk-lv">Lendário · Automação</div><div class="sk-bar-bg"><div class="sk-bar" style="width:95%;background:linear-gradient(90deg,#6b5220,#f5cc6e)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">🐍</div><div class="sk-name">Python</div><div class="sk-lv">Raro · Scripts & Dados</div><div class="sk-bar-bg"><div class="sk-bar" style="width:82%;background:linear-gradient(90deg,#1a6e62,#4ecdc4)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">📅</div><div class="sk-name">MS Project</div><div class="sk-lv">Raro · Cronograma</div><div class="sk-bar-bg"><div class="sk-bar" style="width:85%;background:linear-gradient(90deg,#1a3a7a,#4a7adc)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">🗺</div><div class="sk-name">Visio / BPMN</div><div class="sk-lv">Raro · Processos</div><div class="sk-bar-bg"><div class="sk-bar" style="width:80%;background:linear-gradient(90deg,#1a6e62,#4ecdc4)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">🎯</div><div class="sk-name">Gestão de Projetos</div><div class="sk-lv">Lendário · PMO</div><div class="sk-bar-bg"><div class="sk-bar" style="width:95%;background:linear-gradient(90deg,#6b5220,#f5cc6e)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">🔗</div><div class="sk-name">Power Query</div><div class="sk-lv">Épico · ETL</div><div class="sk-bar-bg"><div class="sk-bar" style="width:88%;background:linear-gradient(90deg,#7a2020,#e05050)"></div></div></div>
+    <div class="skill-card"><div class="sk-icon">💬</div><div class="sk-name">Exec. Communication</div><div class="sk-lv">Épico · Reporting</div><div class="sk-bar-bg"><div class="sk-bar" style="width:87%;background:linear-gradient(90deg,#6b5220,#f5cc6e)"></div></div></div>
+    </div>`
+  },
+  projects:{
+    icon:'🏆',title:'PROJETOS & ENTREGAS',sub:'Quest Log · Missões Completadas',
+    html:`
+    <div class="entry"><div class="entry-title">Controles Integrados de PMO</div><div class="entry-meta">Quest Épica · Excel · Power Query</div>
+    <div class="entry-text">Padronização de planilhas e controles com maior confiabilidade, conectando visões operacionais e executivas. <br><strong>Resultado:</strong> redução de retrabalho e maior clareza para tomada de decisão.</div>
+    <div class="tags"><span class="tag">Excel</span><span class="tag t">Power Query</span><span class="tag">Governança</span></div></div>
+    <div class="entry"><div class="entry-title">Dashboards Executivos em Power BI</div><div class="entry-meta">Quest Épica · Power BI · Analytics</div>
+    <div class="entry-text">Dashboards interativos para acompanhamento de indicadores, status de iniciativas e performance de entregas.<br><strong>Resultado:</strong> visibilidade em tempo real e comunicação executiva eficiente.</div>
+    <div class="tags"><span class="tag">Power BI</span><span class="tag t">DAX</span><span class="tag">Indicadores</span></div></div>
+    <div class="entry"><div class="entry-title">Automação de Rotinas com Python/VBA</div><div class="entry-meta">Quest Rara · Python · VBA</div>
+    <div class="entry-text">Automatização de processos manuais repetitivos, eliminando erros e liberando tempo das equipes.<br><strong>Resultado:</strong> ganho expressivo de eficiência operacional.</div>
+    <div class="tags"><span class="tag t">Python</span><span class="tag">VBA</span><span class="tag">Automação</span></div></div>
+    <div class="entry"><div class="entry-title">Redesenho de Processos Operacionais</div><div class="entry-meta">Quest Rara · BPMN · Melhoria Contínua</div>
+    <div class="entry-text">Mapeamento e reestruturação de fluxos, identificando gargalos e implementando melhorias com documentação clara.<br><strong>Resultado:</strong> processos mais confiáveis e auditáveis.</div>
+    <div class="tags"><span class="tag">Visio</span><span class="tag t">BPMN</span><span class="tag">Melhoria Contínua</span></div></div>`
+  },
+  education:{
+    icon:'📚',title:'FORMAÇÃO',sub:'Knowledge Vault · Upgrades Acquired',
+    html:`
+    <div class="entry"><div class="entry-title">MBA em Gestão de Projetos</div><div class="entry-meta">FEARP — USP · Em andamento</div>
+    <div class="entry-text">Programa com foco em gestão estratégica, metodologias ágeis e tradicionais, governança, PMO e liderança.</div>
+    <div class="tags"><span class="tag">MBA</span><span class="tag t">USP</span><span class="tag">Cursando</span></div></div>
+    <div class="entry"><div class="entry-title">Pós-graduação em Gestão de Projetos</div><div class="entry-meta">Descomplica Faculdade Digital · Concluído</div>
+    <div class="entry-text">Especialização em metodologias, planejamento, escopo, riscos e comunicação em ambientes complexos.</div>
+    <div class="tags"><span class="tag">Pós-graduação</span><span class="tag t">Concluído</span></div></div>
+    <div class="entry"><div class="entry-title">Bacharelado em Engenharia Civil</div><div class="entry-meta">Graduação · Concluído</div>
+    <div class="entry-text">Formação técnica sólida em planejamento, gestão, análise quantitativa e projetos complexos.</div>
+    <div class="tags"><span class="tag">Engenharia Civil</span><span class="tag t">Base Técnica</span></div></div>
+    <div class="entry"><div class="entry-title">Certificações Complementares</div><div class="entry-meta">Continuous Learning · Ongoing</div>
+    <div class="entry-text">Power BI, Excel Avançado, Python, análise de dados, processos e reporting executivo.</div>
+    <div class="tags"><span class="tag">Power BI</span><span class="tag t">Python</span><span class="tag">Dados</span></div></div>`
+  },
+  contact:{
+    icon:'🌐',title:'CONTATO',sub:'Portal Final · Iniciar Missão',
+    html:`<p class="summary-quote">Pronto para uma nova missão? Entre em contato e vamos explorar como posso agregar valor ao seu time com <strong>PMO, dados, automação e processos</strong>.</p>
+    <div class="contact-grid">
+      <div class="contact-card" onclick="window.open('mailto:wagnerramoseng@gmail.com')"><div class="cc-icon">📧</div><div><div class="cc-label">Email</div><div class="cc-val">wagnerramoseng@gmail.com</div></div></div>
+      <div class="contact-card" onclick="window.open('https://linkedin.com/in/engwagnerramos','_blank')"><div class="cc-icon">💼</div><div><div class="cc-label">LinkedIn</div><div class="cc-val">engwagnerramos</div></div></div>
+      <div class="contact-card" onclick="window.open('https://github.com/Ramoswagner','_blank')"><div class="cc-icon">💻</div><div><div class="cc-label">GitHub</div><div class="cc-val">Ramoswagner</div></div></div>
+      <div class="contact-card"><div class="cc-icon">📍</div><div><div class="cc-label">Localização</div><div class="cc-val">Brasil</div></div></div>
+    </div>`
+  }
+};
+
+function openSec(key){
+  const s = SECTIONS[key];
+  if(!s) return;
+  document.getElementById('secIcon').textContent = s.icon;
+  document.getElementById('secTitle').textContent = s.title;
+  document.getElementById('secSub').textContent = s.sub;
+  document.getElementById('secBody').innerHTML = s.html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSec(){
+  document.getElementById('overlay').classList.remove('open');
+}
+document.getElementById('overlay').addEventListener('click', e=>{
+  if(e.target===document.getElementById('overlay')) closeSec();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSec(); });
+
+// ══════════════════════════════════════════════════════════════
+//  THREE.JS 3D WORLD
+// ══════════════════════════════════════════════════════════════
+let scene, camera, renderer, clock;
+let player, playerBody;
+let keys={}, yaw=0, pitch=0.4;
+let isLocked=false;
+let nearBuilding=null;
+const buildings3D=[];
+const particles3D=[];
+
+// Float texts
+function spawnFloat(x,y,txt,col='#f5cc6e'){
+  const el=document.createElement('div');
+  el.className='floatnum';
+  el.style.cssText=`left:${x}px;top:${y}px;color:${col};`;
+  el.textContent=txt;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1500);
+}
+
+function initGame(){
+  // Animate stat bars
+  setTimeout(()=>{
+    document.getElementById('sb1').style.width='95%';
+    document.getElementById('sb2').style.width='88%';
+    document.getElementById('sb3').style.width='85%';
+    document.getElementById('sb4').style.width='90%';
+    document.getElementById('sb5').style.width='87%';
+  },600);
+
+  // Scene
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x050a10);
+  scene.fog = new THREE.FogExp2(0x050a10, 0.025);
+
+  clock = new THREE.Clock();
+
+  // Camera (first/third person style, positioned behind player)
+  camera = new THREE.PerspectiveCamera(65, innerWidth/innerHeight, 0.1, 200);
+
+  // Renderer
+  renderer = new THREE.WebGLRenderer({canvas:document.getElementById('c'), antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=0.9;
+
+  buildWorld();
+  buildPlayer();
+  setupLights();
+  setupControls();
+  setupMinimap();
+
+  window.addEventListener('resize', onResize);
+  animate();
+}
+
+// ─── WORLD ────────────────────────────────────────
+function buildWorld(){
+  // Ground — large plane with dark green/earth tone
+  const groundGeo = new THREE.PlaneGeometry(120,120,40,40);
+  // Slightly warp vertices for organic feel
+  const pos = groundGeo.attributes.position;
+  for(let i=0;i<pos.count;i++){
+    pos.setZ(i, (Math.random()-0.5)*0.3);
+  }
+  groundGeo.computeVertexNormals();
+  const groundMat = new THREE.MeshLambertMaterial({color:0x1a2e0a});
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI/2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // Stone path (center cross)
+  addPath( 0, 0, 50, 3);
+  addPath( 0, 0, 3, 50, true);
+
+  // ── BUILDINGS (houses) with section keys ──
+  const houseData = [
+    {key:'about',     pos:[0,0,  -18], color:0x8b5e3c, roofColor:0x7a2020, label:'Vila Inicial',  emoji:'🧭'},
+    {key:'experience',pos:[16,0, -8],  color:0x5a4a2a, roofColor:0x2a4a1a, label:'Guilda',        emoji:'⚔️'},
+    {key:'skills',    pos:[-16,0,-8],  color:0x4a3a5a, roofColor:0x2a1a5a, label:'Torre de Magia',emoji:'🔮'},
+    {key:'projects',  pos:[16,0,  8],  color:0x3a5a4a, roofColor:0x1a4a2a, label:'Salão de Honra', emoji:'🏆'},
+    {key:'education', pos:[-16,0, 8],  color:0x5a3a3a, roofColor:0x5a1a1a, label:'Biblioteca',    emoji:'📚'},
+    {key:'contact',   pos:[0,0,   18], color:0x3a4a5a, roofColor:0x1a2a5a, label:'Portal',        emoji:'🌐'},
+  ];
+
+  houseData.forEach(h => buildHouse(h));
+
+  // Trees scattered around
+  const treePosArr=[
+    [-8,-14],[-12,-20],[8,-20],[20,-18],[22,-6],[22,6],[20,18],[8,20],
+    [-8,20],[-20,18],[-22,6],[-22,-6],[-20,-18],[-12,10],[12,-10],
+    [5,-28],[-5,-28],[5,28],[-5,28],[28,0],[-28,0],
+    [14,-26],[-14,-26],[14,26],[-14,26]
+  ];
+  treePosArr.forEach(([x,z])=> addTree(x,z));
+
+  // Torches along paths
+  const torchPosArr=[[-6,-6],[ 6,-6],[-6, 6],[ 6, 6],[-6,-14],[6,-14],[-6,14],[6,14],[0,-24],[0,24],[-20,0],[20,0]];
+  torchPosArr.forEach(([x,z])=>addTorch(x,z));
+
+  // Stone walls / fences
+  addFenceRing(26, 32);
+
+  // Stars (skybox particles)
+  addStars();
+}
+
+function addPath(cx,cz,sx,sz,cross=false){
+  const geo=new THREE.PlaneGeometry(sx,sz,8,8);
+  const mat=new THREE.MeshLambertMaterial({color:0x5a4a30});
+  const m=new THREE.Mesh(geo,mat);
+  m.rotation.x=-Math.PI/2;
+  m.position.set(cx,0.01,cz);
+  m.receiveShadow=true;
+  scene.add(m);
+}
+
+function buildHouse({key,pos,color,roofColor,label,emoji}){
+  const group=new THREE.Group();
+  const [x,y,z]=pos;
+
+  // Walls
+  const wallGeo=new THREE.BoxGeometry(6,4,6);
+  const wallMat=new THREE.MeshLambertMaterial({color});
+  const walls=new THREE.Mesh(wallGeo,wallMat);
+  walls.position.y=2;
+  walls.castShadow=true;
+  walls.receiveShadow=true;
+  group.add(walls);
+
+  // Roof (pyramid)
+  const roofGeo=new THREE.ConeGeometry(4.8,3,4);
+  const roofMat=new THREE.MeshLambertMaterial({color:roofColor});
+  const roof=new THREE.Mesh(roofGeo,roofMat);
+  roof.position.y=5.5;
+  roof.rotation.y=Math.PI/4;
+  roof.castShadow=true;
+  group.add(roof);
+
+  // Door
+  const doorGeo=new THREE.BoxGeometry(1.2,2,0.1);
+  const doorMat=new THREE.MeshLambertMaterial({color:0x3a2010});
+  const door=new THREE.Mesh(doorGeo,doorMat);
+  door.position.set(0,1,3.05);
+  group.add(door);
+
+  // Windows
+  [-1.5,1.5].forEach(ox=>{
+    const wGeo=new THREE.BoxGeometry(0.8,0.8,0.1);
+    const wMat=new THREE.MeshLambertMaterial({color:0xffe080,emissive:0xffe080,emissiveIntensity:0.4});
+    const w=new THREE.Mesh(wGeo,wMat);
+    w.position.set(ox,2.5,3.05);
+    group.add(w);
+    // Window glow light
+    const wl=new THREE.PointLight(0xffe080,0.4,4);
+    wl.position.set(ox,2.5,3.5);
+    group.add(wl);
+  });
+
+  // Floating label (sprite canvas)
+  const labelSprite=makeLabel(emoji+' '+label);
+  labelSprite.position.set(0,8,0);
+  group.add(labelSprite);
+
+  group.position.set(x,y,z);
+  scene.add(group);
+
+  buildings3D.push({
+    key, group,
+    center:new THREE.Vector3(x,0,z),
+    radius:5
+  });
+}
+
+function makeLabel(text){
+  const canvas=document.createElement('canvas');
+  canvas.width=256;canvas.height=64;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,256,64);
+  ctx.fillStyle='rgba(5,9,18,0.85)';
+  ctx.fillRect(0,8,256,48);
+  ctx.strokeStyle='rgba(212,168,75,0.6)';
+  ctx.lineWidth=2;
+  ctx.strokeRect(1,9,254,46);
+  ctx.fillStyle='#f5cc6e';
+  ctx.font='bold 20px Cinzel, serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(text,128,34);
+  const tex=new THREE.CanvasTexture(canvas);
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false});
+  const sprite=new THREE.Sprite(mat);
+  sprite.scale.set(5,1.3,1);
+  return sprite;
+}
+
+function addTree(x,z){
+  const g=new THREE.Group();
+  // Trunk
+  const trGeo=new THREE.CylinderGeometry(0.18,0.25,1.4,6);
+  const trMat=new THREE.MeshLambertMaterial({color:0x5a3a1a});
+  const tr=new THREE.Mesh(trGeo,trMat);
+  tr.position.y=0.7;
+  tr.castShadow=true;
+  g.add(tr);
+  // Foliage layers
+  [[1.6,2.2,1.6],[1.3,1.8,1.7],[1.0,1.5,2.4]].forEach(([rx,ry,py],i)=>{
+    const fGeo=new THREE.SphereGeometry(rx,6,5);
+    // Squish into ellipsoid via scale
+    const fMat=new THREE.MeshLambertMaterial({color:i===0?0x1a4a12:i===1?0x226614:0x2a7a1a});
+    const f=new THREE.Mesh(fGeo,fMat);
+    f.scale.y=ry/rx;
+    f.position.y=py;
+    f.castShadow=true;
+    g.add(f);
+  });
+  g.position.set(x,0,z);
+  scene.add(g);
+}
+
+function addTorch(x,z){
+  const g=new THREE.Group();
+  // Pole
+  const pGeo=new THREE.CylinderGeometry(0.06,0.06,1.4,6);
+  const pMat=new THREE.MeshLambertMaterial({color:0x5a3a1a});
+  const p=new THREE.Mesh(pGeo,pMat);
+  p.position.y=0.7;
+  g.add(p);
+  // Flame light
+  const fl=new THREE.PointLight(0xff8820,1.5,8);
+  fl.position.y=1.7;
+  fl.castShadow=false;
+  g.add(fl);
+  // Store for flicker
+  g.userData.light=fl;
+  g.userData.baseInt=1.5;
+  // Flame mesh
+  const fGeo=new THREE.SphereGeometry(0.12,5,5);
+  const fMat=new THREE.MeshLambertMaterial({color:0xffcc44,emissive:0xff8800,emissiveIntensity:1});
+  const fm=new THREE.Mesh(fGeo,fMat);
+  fm.position.y=1.7;
+  g.add(fm);
+  g.position.set(x,0,z);
+  scene.add(g);
+  particles3D.push(g);
+}
+
+function addFenceRing(r,count){
+  for(let i=0;i<count;i++){
+    const a=(i/count)*Math.PI*2;
+    const x=Math.cos(a)*r;
+    const z=Math.sin(a)*r;
+    const geo=new THREE.BoxGeometry(0.3,1.2,0.3);
+    const mat=new THREE.MeshLambertMaterial({color:0x5a4a30});
+    const m=new THREE.Mesh(geo,mat);
+    m.position.set(x,0.6,z);
+    m.castShadow=true;
+    scene.add(m);
+  }
+}
+
+function addStars(){
+  const geo=new THREE.BufferGeometry();
+  const N=2000;
+  const pos=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const theta=Math.random()*Math.PI*2;
+    const phi=Math.acos((Math.random()*2)-1);
+    const r=80+Math.random()*40;
+    pos[i*3]  =r*Math.sin(phi)*Math.cos(theta);
+    pos[i*3+1]=r*Math.cos(phi);
+    pos[i*3+2]=r*Math.sin(phi)*Math.sin(theta);
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  const mat=new THREE.PointsMaterial({color:0xffffff,size:0.25,sizeAttenuation:true});
+  scene.add(new THREE.Points(geo,mat));
+}
+
+// ─── PLAYER ────────────────────────────────────────
+function buildPlayer(){
+  player=new THREE.Group();
+
+  // Body (torso)
+  const bGeo=new THREE.BoxGeometry(0.6,0.7,0.4);
+  const bMat=new THREE.MeshLambertMaterial({color:0x1a3a5a});
+  playerBody=new THREE.Mesh(bGeo,bMat);
+  playerBody.position.y=0.95;
+  playerBody.castShadow=true;
+  player.add(playerBody);
+
+  // Head
+  const hGeo=new THREE.BoxGeometry(0.42,0.42,0.42);
+  const hMat=new THREE.MeshLambertMaterial({color:0xf4c99b});
+  const head=new THREE.Mesh(hGeo,hMat);
+  head.position.y=1.55;
+  head.castShadow=true;
+  player.add(head);
+
+  // Hair
+  const hairGeo=new THREE.BoxGeometry(0.44,0.18,0.44);
+  const hairMat=new THREE.MeshLambertMaterial({color:0x2f1a10});
+  const hair=new THREE.Mesh(hairGeo,hairMat);
+  hair.position.y=1.82;
+  player.add(hair);
+
+  // Legs
+  [[-0.15,0],[0.15,0]].forEach(([ox])=>{
+    const lGeo=new THREE.BoxGeometry(0.24,0.55,0.28);
+    const lMat=new THREE.MeshLambertMaterial({color:0x334155});
+    const leg=new THREE.Mesh(lGeo,lMat);
+    leg.position.set(ox,0.3,0);
+    leg.castShadow=true;
+    player.add(leg);
+    leg.userData.isLeg=true;
+    leg.userData.offset=ox;
+  });
+
+  // Cape
+  const cGeo=new THREE.PlaneGeometry(0.7,0.8);
+  const cMat=new THREE.MeshLambertMaterial({color:0x1e3a1e,side:THREE.DoubleSide});
+  const cape=new THREE.Mesh(cGeo,cMat);
+  cape.position.set(0,1.0,-0.22);
+  player.add(cape);
+
+  // Sword
+  const swGeo=new THREE.BoxGeometry(0.06,0.7,0.06);
+  const swMat=new THREE.MeshLambertMaterial({color:0xc8c8c8,emissive:0x4a4a6a,emissiveIntensity:0.3});
+  const sw=new THREE.Mesh(swGeo,swMat);
+  sw.position.set(0.44,1.1,0);
+  sw.rotation.z=0.15;
+  player.add(sw);
+  // Sword glow
+  const swl=new THREE.PointLight(0x4dd9c0,0.6,2);
+  swl.position.set(0.44,1.4,0);
+  player.add(swl);
+
+  player.position.set(0,0,0);
+  scene.add(player);
+}
+
+// ─── LIGHTS ────────────────────────────────────────
+function setupLights(){
+  // Ambient
+  const amb=new THREE.AmbientLight(0x1a2040,0.6);
+  scene.add(amb);
+
+  // Moon directional
+  const moon=new THREE.DirectionalLight(0x6080cc,0.8);
+  moon.position.set(-20,40,-20);
+  moon.castShadow=true;
+  moon.shadow.mapSize.width=2048;
+  moon.shadow.mapSize.height=2048;
+  moon.shadow.camera.near=0.1;
+  moon.shadow.camera.far=120;
+  moon.shadow.camera.left=-50;
+  moon.shadow.camera.right=50;
+  moon.shadow.camera.top=50;
+  moon.shadow.camera.bottom=-50;
+  scene.add(moon);
+
+  // Warm fill from ground
+  const fill=new THREE.HemisphereLight(0x1a2040,0x3a2a10,0.4);
+  scene.add(fill);
+}
+
+// ─── CONTROLS ─────────────────────────────────────
+function setupControls(){
+  const canvas=document.getElementById('c');
+
+  canvas.addEventListener('click',()=>{
+    if(!document.getElementById('overlay').classList.contains('open')){
+      canvas.requestPointerLock();
+    }
+  });
+
+  document.addEventListener('pointerlockchange',()=>{
+    isLocked=document.pointerLockElement===canvas;
+  });
+
+  document.addEventListener('mousemove', e=>{
+    if(!isLocked) return;
+    yaw   -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+    pitch = Math.max(-0.4, Math.min(0.9, pitch));
+  });
+
+  document.addEventListener('keydown', e=>{
+    keys[e.key.toLowerCase()]=true;
+    if((e.key==='e'||e.key==='Enter') && nearBuilding){
+      openSec(nearBuilding.key);
+      spawnFloat(window.innerWidth/2, window.innerHeight/2-60, '✦ ENTER ✦','#4ecdc4');
+    }
+  });
+  document.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()]=false; });
+
+  // Mobile dpad
+  function holdKey(k, val){ document.addEventListener(val?'touchstart':'touchend', e=>{ keys[k]=val; e.preventDefault(); }, {passive:false}); }
+  ['dU','dD','dL','dR'].forEach((id,i)=>{
+    const k=['w','s','a','d'][i];
+    const el=document.getElementById(id);
+    el.addEventListener('touchstart',e=>{keys[k]=true;e.preventDefault();},{passive:false});
+    el.addEventListener('touchend',e=>{keys[k]=false;e.preventDefault();},{passive:false});
+    el.addEventListener('mousedown',()=>keys[k]=true);
+    el.addEventListener('mouseup',()=>keys[k]=false);
+  });
+  document.getElementById('dI').addEventListener('click',()=>{
+    if(nearBuilding) openSec(nearBuilding.key);
+  });
+}
+
+// ─── MINIMAP ───────────────────────────────────────
+function setupMinimap(){
+  const mc=document.getElementById('minimapCanvas');
+  mc.width=160; mc.height=160;
+}
+
+function drawMinimap(){
+  const mc=document.getElementById('minimapCanvas');
+  const mctx=mc.getContext('2d');
+  const W=mc.width, H=mc.height;
+  mctx.clearRect(0,0,W,H);
+
+  // BG
+  mctx.fillStyle='#060c14';
+  mctx.fillRect(0,0,W,H);
+
+  // Grid
+  mctx.strokeStyle='rgba(255,255,255,0.04)';
+  mctx.lineWidth=1;
+  for(let i=0;i<=10;i++){
+    const x=i*(W/10), y=i*(H/10);
+    mctx.beginPath(); mctx.moveTo(x,0); mctx.lineTo(x,H); mctx.stroke();
+    mctx.beginPath(); mctx.moveTo(0,y); mctx.lineTo(W,y); mctx.stroke();
+  }
+
+  // Scale: world -32..32 → 0..W
+  const toMM=(wx,wz)=>({
+    mx:(wx+32)/(64)*W,
+    my:(wz+32)/(64)*H
+  });
+
+  // Buildings
+  buildings3D.forEach(b=>{
+    const {mx,my}=toMM(b.center.x,b.center.z);
+    mctx.fillStyle='rgba(212,168,75,0.7)';
+    mctx.fillRect(mx-4,my-4,8,8);
+  });
+
+  // Player dot
+  const {mx,my}=toMM(player.position.x,player.position.z);
+  const t=performance.now()*0.003;
+  const pulse=0.6+Math.sin(t*4)*0.4;
+  mctx.beginPath();
+  mctx.arc(mx,my,5+pulse*2,0,Math.PI*2);
+  mctx.fillStyle=`rgba(78,205,196,${pulse*0.2})`;
+  mctx.fill();
+  mctx.beginPath();
+  mctx.arc(mx,my,3.5,0,Math.PI*2);
+  mctx.fillStyle='#4ecdc4';
+  mctx.fill();
+
+  // Direction arrow
+  const dx=Math.sin(yaw)*8, dz=Math.cos(yaw)*8;
+  mctx.strokeStyle='rgba(212,168,75,0.8)';
+  mctx.lineWidth=1.5;
+  mctx.beginPath();
+  mctx.moveTo(mx,my);
+  mctx.lineTo(mx+dx,my+dz);
+  mctx.stroke();
+}
+
+// ─── ANIMATION LOOP ───────────────────────────────
+let walkTime=0;
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  const t=clock.getElapsedTime();
+
+  // Movement
+  const speed=5.5;
+  const dir=new THREE.Vector3();
+  if(keys['w']||keys['arrowup'])    dir.z-=1;
+  if(keys['s']||keys['arrowdown'])  dir.z+=1;
+  if(keys['a']||keys['arrowleft'])  dir.x-=1;
+  if(keys['d']||keys['arrowright']) dir.x+=1;
+
+  const isMoving=dir.length()>0;
+  if(isMoving){
+    walkTime+=dt*8;
+    dir.normalize();
+    // Rotate direction by yaw
+    const cosY=Math.cos(yaw), sinY=Math.sin(yaw);
+    const mx2=dir.x*cosY+dir.z*sinY;
+    const mz2=-dir.x*sinY+dir.z*cosY;
+    player.position.x+=mx2*speed*dt;
+    player.position.z+=mz2*speed*dt;
+    // Clamp to world bounds
+    player.position.x=Math.max(-30,Math.min(30,player.position.x));
+    player.position.z=Math.max(-30,Math.min(30,player.position.z));
+    // Face direction of movement
+    player.rotation.y=yaw+Math.atan2(dir.x,dir.z);
+  }
+
+  // Leg animation
+  player.children.forEach(c=>{
+    if(c.userData.isLeg){
+      c.rotation.x=isMoving?Math.sin(walkTime+(c.userData.offset>0?Math.PI:0))*0.5:0;
+    }
+  });
+
+  // Bob
+  player.position.y=isMoving?Math.abs(Math.sin(walkTime*0.5))*0.06:0;
+
+  // Torch flicker
+  particles3D.forEach(g=>{
+    if(g.userData.light){
+      g.userData.light.intensity=g.userData.baseInt+(Math.sin(t*12+g.position.x)*0.3+Math.random()*0.1);
+    }
+  });
+
+  // Camera follow (third person)
+  const camDist=7;
+  const camHeight=3.5;
+  const camX=player.position.x+Math.sin(yaw)*camDist;
+  const camZ=player.position.z+Math.cos(yaw)*camDist;
+  const camY=player.position.y+camHeight+Math.sin(pitch)*camDist*0.5;
+  camera.position.lerp(new THREE.Vector3(camX,camY,camZ),0.12);
+  camera.lookAt(player.position.x, player.position.y+1.5, player.position.z);
+
+  // Compass
+  document.getElementById('compassNeedle').style.transform=`rotate(${-yaw*180/Math.PI}deg)`;
+
+  // Proximity detection
+  nearBuilding=null;
+  let closestDist=4.5;
+  buildings3D.forEach(b=>{
+    const d=player.position.distanceTo(b.center);
+    if(d<closestDist){ closestDist=d; nearBuilding=b; }
+  });
+  const prompt=document.getElementById('prompt');
+  if(nearBuilding){
+    const s=SECTIONS[nearBuilding.key];
+    prompt.style.display='block';
+    prompt.textContent=`[ E ] Entrar — ${s?s.title:'...'}`;
+  } else {
+    prompt.style.display='none';
+  }
+
+  // Label sprites: always face camera
+  buildings3D.forEach(b=>{
+    b.group.children.forEach(c=>{
+      if(c.isSprite){
+        // Sprites auto-face camera in Three.js
       }
-    };
-
-    function startGame(){
-      startScreen.classList.remove("active");
-      gameScreen.classList.add("active");
-      positionPlayer();
-    }
-
-    function backToTitle(){
-      closeDialog();
-      gameScreen.classList.remove("active");
-      startScreen.classList.add("active");
-    }
-
-    function openManual(){
-      openDialogFromData(sections.manual);
-    }
-
-    function openDirectProfile(){
-      openDialogFromData(sections.direct);
-    }
-
-    function openSection(key){
-      if(sections[key]) openDialogFromData(sections[key]);
-    }
-
-    function getWorldBounds(){
-      const wr = world.getBoundingClientRect();
-      return {
-        width: wr.width,
-        height: wr.height,
-        playerWidth: 34,
-        playerHeight: 42
-      };
-    }
-
-    function clamp(n,min,max){
-      return Math.max(min, Math.min(max, n));
-    }
-
-    function positionPlayer(){
-      player.style.left = state.x + "px";
-      player.style.top = state.y + "px";
-      detectInteractable();
-    }
-
-    function movePlayer(direction){
-      if(!state.canMove) return;
-
-      const b = getWorldBounds();
-
-      if(direction === "up") state.y -= state.step;
-      if(direction === "down") state.y += state.step;
-      if(direction === "left") state.x -= state.step;
-      if(direction === "right") state.x += state.step;
-
-      state.x = clamp(state.x, 0, b.width - b.playerWidth);
-      state.y = clamp(state.y, 0, b.height - b.playerHeight);
-
-      positionPlayer();
-    }
-
-    function rectsOverlap(a, b){
-      const r1 = a.getBoundingClientRect();
-      const r2 = b.getBoundingClientRect();
-
-      return !(
-        r1.right < r2.left ||
-        r1.left > r2.right ||
-        r1.bottom < r2.top ||
-        r1.top > r2.bottom
-      );
-    }
-
-    function nearElement(a, b, margin = 18){
-      const r1 = a.getBoundingClientRect();
-      const r2 = b.getBoundingClientRect();
-
-      return !(
-        r1.right + margin < r2.left ||
-        r1.left - margin > r2.right ||
-        r1.bottom + margin < r2.top ||
-        r1.top - margin > r2.bottom
-      );
-    }
-
-    function detectInteractable(){
-      state.currentInteractable = null;
-
-      for(const npc of npcs){
-        if(nearElement(player, npc, 20) || rectsOverlap(player, npc)){
-          state.currentInteractable = npc.dataset.key;
-          showHint("Pressione E para falar com " + npc.querySelector(".npc-name").textContent);
-          return;
-        }
-      }
-
-      for(const building of buildings){
-        if(nearElement(player, building, 16) || rectsOverlap(player, building)){
-          const zone = building.dataset.zone;
-          state.currentInteractable = zone;
-          showHint("Pressione E para entrar em " + building.innerText.replace(/\s+/g, " ").trim());
-          return;
-        }
-      }
-
-      hideHint();
-    }
-
-    function showHint(text){
-      hintBubble.textContent = text;
-      hintBubble.classList.add("active");
-    }
-
-    function hideHint(){
-      hintBubble.classList.remove("active");
-    }
-
-    function interact(){
-      if(state.currentInteractable && sections[state.currentInteractable]){
-        openDialogFromData(sections[state.currentInteractable]);
-      }
-    }
-
-    function openDialogFromData(data){
-      state.canMove = false;
-      dialogOverlay.classList.add("active");
-      dialogTitle.innerHTML = data.title;
-      dialogText.innerHTML = data.html;
-      portraitName.textContent = data.speaker;
-      portraitRole.textContent = data.role;
-      portraitBody.style.background = data.color;
-    }
-
-    function closeDialog(){
-      dialogOverlay.classList.remove("active");
-      state.canMove = true;
-      detectInteractable();
-    }
-
-    document.addEventListener("keydown", (e)=>{
-      const key = e.key.toLowerCase();
-
-      if(key === "escape"){
-        closeDialog();
-        return;
-      }
-
-      if(key === "e" || key === "enter"){
-        interact();
-        return;
-      }
-
-      if(!state.canMove) return;
-
-      if(key === "arrowup" || key === "w") movePlayer("up");
-      if(key === "arrowdown" || key === "s") movePlayer("down");
-      if(key === "arrowleft" || key === "a") movePlayer("left");
-      if(key === "arrowright" || key === "d") movePlayer("right");
     });
+  });
 
-    npcs.forEach(npc=>{
-      npc.addEventListener("click", ()=>openSection(npc.dataset.key));
-    });
+  drawMinimap();
+  renderer.render(scene,camera);
+}
 
-    buildings.forEach(building=>{
-      building.addEventListener("click", ()=>openSection(building.dataset.zone));
-    });
+function onResize(){
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+}
 
-    window.addEventListener("resize", ()=>{
-      const b = getWorldBounds();
-      state.x = clamp(state.x, 0, b.width - b.playerWidth);
-      state.y = clamp(state.y, 0, b.height - b.playerHeight);
-      positionPlayer();
-    });
-  </script>
+// Portrait canvas mini animation
+const pCanvas=document.getElementById('portraitCanvas');
+if(pCanvas){
+  const pc=pCanvas.getContext('2d');
+  let pT=0;
+  (function pAnimate(){
+    requestAnimationFrame(pAnimate);
+    pT+=0.02;
+    const W=pCanvas.width, H=pCanvas.height;
+    pc.clearRect(0,0,W,H);
+    const bg=pc.createRadialGradient(W/2,H,0,W/2,H*0.4,H);
+    bg.addColorStop(0,'rgba(30,80,60,.25)');
+    bg.addColorStop(1,'transparent');
+    pc.fillStyle=bg; pc.fillRect(0,0,W,H);
+    const cx=W/2, bob=Math.sin(pT)*2, cy=H*0.52+bob;
+    // shadow
+    pc.beginPath(); pc.ellipse(cx,cy+20,14,5,0,0,Math.PI*2);
+    pc.fillStyle='rgba(0,0,0,.35)'; pc.fill();
+    // legs
+    pc.fillStyle='#334155';
+    pc.fillRect(cx-9,cy+10,7,14);
+    pc.fillRect(cx+2,cy+10,7,14);
+    // body
+    pc.fillStyle='#1a3a5a';
+    pc.fillRect(cx-10,cy-4,20,16);
+    pc.fillStyle='#4ecdc4';
+    pc.fillRect(cx-1,cy-2,2,12);
+    // shoulders
+    pc.fillStyle='#d4a84b';
+    pc.fillRect(cx-14,cy-4,6,6);
+    pc.fillRect(cx+8,cy-4,6,6);
+    // head
+    pc.fillStyle='#f4c99b';
+    pc.fillRect(cx-7,cy-18,14,14);
+    // hair
+    pc.fillStyle='#2f1a10';
+    pc.fillRect(cx-8,cy-20,16,7);
+    // eyes
+    pc.shadowColor='#4ecdc4'; pc.shadowBlur=4;
+    pc.fillStyle='#4ecdc4';
+    pc.fillRect(cx-4,cy-13,3,2);
+    pc.fillRect(cx+1,cy-13,3,2);
+    pc.shadowBlur=0;
+  })();
+}
+</script>
 </body>
 </html>
