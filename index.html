@@ -1,666 +1,1062 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Personagem 3D Estilo Pixar</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      font-family: 'Arial', sans-serif;
-    }
-    
-    #info {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      color: white;
-      background: rgba(0,0,0,0.5);
-      padding: 8px 16px;
-      border-radius: 20px;
-      backdrop-filter: blur(5px);
-      pointer-events: none;
-      z-index: 100;
-    }
-    
-    #controls-hint {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      color: rgba(255,255,255,0.7);
-      background: rgba(0,0,0,0.3);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      backdrop-filter: blur(5px);
-      pointer-events: none;
-      z-index: 100;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avatar Studio · Criador de Avatares</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            min-height: 100vh;
+            color: var(--light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 18px;
+        }
+
+        /* Preview Area */
+        .preview-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 500px;
+        }
+
+        .preview-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-bottom: 30px;
+        }
+
+        #avatarCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Status indicators */
+        .status-badge {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 4px solid var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .status-online {
+            background: var(--success);
+            box-shadow: 0 0 20px var(--success);
+        }
+
+        .status-busy {
+            background: var(--danger);
+            box-shadow: 0 0 20px var(--danger);
+        }
+
+        .status-away {
+            background: var(--warning);
+            box-shadow: 0 0 20px var(--warning);
+        }
+
+        .level-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border: 4px solid var(--dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: var(--dark);
+            box-shadow: 0 10px 30px rgba(245, 158, 11, 0.4);
+        }
+
+        .level-badge span:first-child {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .level-badge span:last-child {
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        /* Controls Panel */
+        .controls-section {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 24px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--gray);
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .upload-area.has-image {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            color: var(--gray);
+        }
+
+        .upload-text strong {
+            color: var(--light);
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Style Buttons */
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .style-btn {
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            color: var(--light);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .style-btn:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .style-btn.active {
+            border-color: var(--primary);
+            background: var(--primary);
+        }
+
+        .style-btn .emoji {
+            font-size: 20px;
+        }
+
+        /* Status Toggle */
+        .status-options {
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-btn {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            color: var(--light);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .status-btn.online {
+            border-color: var(--success);
+            color: var(--success);
+        }
+
+        .status-btn.online.active {
+            background: var(--success);
+            color: white;
+        }
+
+        .status-btn.busy {
+            border-color: var(--danger);
+            color: var(--danger);
+        }
+
+        .status-btn.busy.active {
+            background: var(--danger);
+            color: white;
+        }
+
+        .status-btn.away {
+            border-color: var(--warning);
+            color: var(--warning);
+        }
+
+        .status-btn.away.active {
+            background: var(--warning);
+            color: white;
+        }
+
+        /* Range Sliders */
+        .slider-container {
+            margin-bottom: 16px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Action Buttons */
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--dark);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Preset Avatars */
+        .presets {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .preset {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .preset:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
+        }
+
+        .preset img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .preview-container {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div id="info">✨ Wagner Douglas - Personagem 3D Estilo Pixar</div>
-  <div id="controls-hint">🖱️ Arraste para girar | Scroll para zoom</div>
+    <div class="header">
+        <h1>Avatar Studio</h1>
+        <p>Crie avatares profissionais com efeitos e elementos interativos</p>
+    </div>
 
-  <script type="importmap">
-    {
-      "imports": {
-        "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
-        "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
-      }
-    }
-  </script>
+    <div class="container">
+        <!-- Preview Section -->
+        <div class="preview-section">
+            <div class="preview-container" id="previewContainer">
+                <canvas id="avatarCanvas" width="300" height="300"></canvas>
+                
+                <!-- Level Badge -->
+                <div class="level-badge" id="levelBadge" style="display: none;">
+                    <span>LVL</span>
+                    <span id="levelNum">42</span>
+                </div>
+                
+                <!-- Status Indicator -->
+                <div class="status-badge status-online" id="statusBadge" style="display: none;">
+                    <span id="statusIcon">●</span>
+                </div>
+            </div>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+            <div class="presets" id="presets" style="display: none;">
+                <!-- Preset avatars will appear here after upload -->
+            </div>
 
-    // ============================================
-    // CENA, CÂMERA, RENDERIZADOR
-    // ============================================
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87CEEB); // Céu azul claro
-    
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(3, 2, 5);
-    camera.lookAt(0, 1, 0);
-    
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Sombras mais suaves
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
-    document.body.appendChild(renderer.domElement);
-    
-    // Controles orbitais
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 1.0;
-    controls.maxPolarAngle = Math.PI / 2; // Não permite ver embaixo do chão
-    controls.target.set(0, 1.2, 0);
-    
-    // ============================================
-    // ILUMINAÇÃO ESTILO PIXAR
-    // ============================================
-    
-    // Luz principal (sol) - quente
-    const sunLight = new THREE.DirectionalLight(0xfff5d1, 1.5);
-    sunLight.position.set(5, 10, 7);
-    sunLight.castShadow = true;
-    sunLight.shadow.mapSize.width = 2048;
-    sunLight.shadow.mapSize.height = 2048;
-    sunLight.shadow.camera.near = 0.5;
-    sunLight.shadow.camera.far = 25;
-    sunLight.shadow.camera.left = -10;
-    sunLight.shadow.camera.right = 10;
-    sunLight.shadow.camera.top = 10;
-    sunLight.shadow.camera.bottom = -10;
-    sunLight.shadow.bias = -0.0001;
-    scene.add(sunLight);
-    
-    // Luz de preenchimento - fria
-    const fillLight = new THREE.DirectionalLight(0xaaccff, 0.8);
-    fillLight.position.set(-5, 5, -5);
-    scene.add(fillLight);
-    
-    // Luz ambiente
-    const ambientLight = new THREE.AmbientLight(0x404060, 0.6);
-    scene.add(ambientLight);
-    
-    // Luz de rim (contorno)
-    const rimLight = new THREE.DirectionalLight(0xffeedd, 0.5);
-    rimLight.position.set(-2, 3, -5);
-    scene.add(rimLight);
-    
-    // Pontos de luz para dar brilho nos olhos
-    const eyeLight1 = new THREE.PointLight(0xffffff, 0.3);
-    eyeLight1.position.set(2, 3, 3);
-    scene.add(eyeLight1);
-    
-    const eyeLight2 = new THREE.PointLight(0xffffff, 0.3);
-    eyeLight2.position.set(-2, 3, 3);
-    scene.add(eyeLight2);
-    
-    // ============================================
-    // CENÁRIO - GRAMA, FLORES, ÁRVORES
-    // ============================================
-    
-    // Chão com textura de grama
-    const groundGeometry = new THREE.CircleGeometry(15, 32);
-    
-    // Criar textura de grama procedural
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#4a9e4a';
-    ctx.fillRect(0, 0, 512, 512);
-    
-    // Adicionar variação de cor (manchas mais claras/escuras)
-    for (let i = 0; i < 2000; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 512;
-      const r = 3 + Math.random() * 5;
-      const brightness = 0.8 + Math.random() * 0.4;
-      ctx.fillStyle = `rgba(70, 160, 70, ${Math.random() * 0.3})`;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    
-    const groundTexture = new THREE.CanvasTexture(canvas);
-    groundTexture.wrapS = THREE.RepeatWrapping;
-    groundTexture.wrapT = THREE.RepeatWrapping;
-    groundTexture.repeat.set(8, 8);
-    
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
-      map: groundTexture,
-      roughness: 0.8,
-      metalness: 0.1
-    });
-    
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = 0;
-    ground.receiveShadow = true;
-    scene.add(ground);
-    
-    // Adicionar algumas flores
-    function createFlower(x, z, color) {
-      const group = new THREE.Group();
-      
-      // Caule
-      const stemMat = new THREE.MeshStandardMaterial({ color: 0x4caf50 });
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.3), stemMat);
-      stem.position.y = 0.15;
-      group.add(stem);
-      
-      // Pétalas (5 esferinhas ao redor)
-      const petalMat = new THREE.MeshStandardMaterial({ color: color });
-      
-      for (let i = 0; i < 5; i++) {
-        const angle = (i / 5) * Math.PI * 2;
-        const petal = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6), petalMat);
-        petal.position.set(Math.cos(angle) * 0.15, 0.35, Math.sin(angle) * 0.15);
-        group.add(petal);
-      }
-      
-      // Centro
-      const centerMat = new THREE.MeshStandardMaterial({ color: 0xffaa00 });
-      const center = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8), centerMat);
-      center.position.y = 0.35;
-      group.add(center);
-      
-      group.position.set(x, 0, z);
-      group.castShadow = true;
-      group.receiveShadow = true;
-      return group;
-    }
-    
-    // Flores coloridas
-    const flowerColors = [0xff6b6b, 0xffd93d, 0x6bcb77, 0x4d96ff, 0xff9f9f];
-    for (let i = 0; i < 40; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 3 + Math.random() * 8;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      const color = flowerColors[Math.floor(Math.random() * flowerColors.length)];
-      const flower = createFlower(x, z, color);
-      scene.add(flower);
-    }
-    
-    // Algumas pedras decorativas
-    function createStone(x, z, size) {
-      const stoneMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 });
-      const stone = new THREE.Mesh(new THREE.DodecahedronGeometry(size * 0.3, 0), stoneMat);
-      stone.position.set(x, size * 0.15, z);
-      stone.castShadow = true;
-      stone.receiveShadow = true;
-      scene.add(stone);
-    }
-    
-    for (let i = 0; i < 15; i++) {
-      const angle = Math.random() * Math.PI * 2;
-      const radius = 4 + Math.random() * 7;
-      const x = Math.cos(angle) * radius;
-      const z = Math.sin(angle) * radius;
-      createStone(x, z, 0.5 + Math.random() * 0.8);
-    }
-    
-    // Árvores simples
-    function createTree(x, z, size = 1) {
-      const group = new THREE.Group();
-      
-      // Tronco
-      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b });
-      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * size, 0.4 * size, 1.5 * size), trunkMat);
-      trunk.position.y = 0.75 * size;
-      trunk.castShadow = true;
-      trunk.receiveShadow = true;
-      group.add(trunk);
-      
-      // Copa (várias esferas)
-      const leafMat = new THREE.MeshStandardMaterial({ color: 0x3cb371 });
-      
-      const leaf1 = new THREE.Mesh(new THREE.SphereGeometry(0.6 * size, 6), leafMat);
-      leaf1.position.set(0, 1.6 * size, 0);
-      leaf1.castShadow = true;
-      leaf1.receiveShadow = true;
-      group.add(leaf1);
-      
-      const leaf2 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * size, 6), leafMat);
-      leaf2.position.set(0.4 * size, 2.1 * size, 0.2 * size);
-      leaf2.castShadow = true;
-      leaf2.receiveShadow = true;
-      group.add(leaf2);
-      
-      const leaf3 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * size, 6), leafMat);
-      leaf3.position.set(-0.3 * size, 2.2 * size, -0.3 * size);
-      leaf3.castShadow = true;
-      leaf3.receiveShadow = true;
-      group.add(leaf3);
-      
-      const leaf4 = new THREE.Mesh(new THREE.SphereGeometry(0.4 * size, 6), leafMat);
-      leaf4.position.set(0.2 * size, 1.9 * size, 0.6 * size);
-      leaf4.castShadow = true;
-      leaf4.receiveShadow = true;
-      group.add(leaf4);
-      
-      group.position.set(x, 0, z);
-      return group;
-    }
-    
-    // Adicionar árvores ao redor
-    const treePositions = [
-      [-5, -4], [6, -5], [-6, 5], [5, 6],
-      [-8, -7], [8, -6], [-7, 8], [7, 7],
-      [0, -9], [-9, 0], [9, 0], [0, 9]
-    ];
-    
-    treePositions.forEach(([x, z]) => {
-      const tree = createTree(x, z, 1 + Math.random() * 0.3);
-      scene.add(tree);
-    });
-    
-    // ============================================
-    // CRIAÇÃO DO PERSONAGEM ESTILO PIXAR
-    // ============================================
-    
-    const character = new THREE.Group();
-    
-    // Cores
-    const skinColor = 0xffccaa;
-    const skinDarkColor = 0xeebb99;
-    const eyeWhiteColor = 0xffffff;
-    const eyeIrisColor = 0x5d3a1a;
-    const eyePupilColor = 0x111111;
-    const hairColor = 0x2c1e0e;
-    const shirtColor = 0x4169e1; // Azul royal
-    const pantsColor = 0x2c3e50;
-    const shoeColor = 0x34495e;
-    
-    // CORPO (torso)
-    const torsoGeo = new THREE.CylinderGeometry(0.5, 0.55, 1.2, 8);
-    const torsoMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.4, emissive: 0x000000 });
-    const torso = new THREE.Mesh(torsoGeo, torsoMat);
-    torso.position.y = 0.9;
-    torso.castShadow = true;
-    torso.receiveShadow = true;
-    character.add(torso);
-    
-    // Gola da camisa
-    const collarGeo = new THREE.TorusGeometry(0.4, 0.08, 4, 8, Math.PI);
-    collarGeo.rotateX(Math.PI / 2);
-    const collarMat = new THREE.MeshStandardMaterial({ color: 0x2a4a8a });
-    const collar = new THREE.Mesh(collarGeo, collarMat);
-    collar.position.set(0, 1.45, 0);
-    collar.castShadow = true;
-    character.add(collar);
-    
-    // PESCOÇO
-    const neckGeo = new THREE.CylinderGeometry(0.2, 0.22, 0.2, 6);
-    const neckMat = new THREE.MeshStandardMaterial({ color: skinColor });
-    const neck = new THREE.Mesh(neckGeo, neckMat);
-    neck.position.y = 1.55;
-    neck.castShadow = true;
-    neck.receiveShadow = true;
-    character.add(neck);
-    
-    // CABEÇA (formato mais cartunesco)
-    const headGeo = new THREE.SphereGeometry(0.5, 24, 24);
-    const headMat = new THREE.MeshStandardMaterial({ color: skinColor, roughness: 0.3 });
-    const head = new THREE.Mesh(headGeo, headMat);
-    head.position.y = 2.0;
-    head.castShadow = true;
-    head.receiveShadow = true;
-    character.add(head);
-    
-    // BOCHECHAS (sutil)
-    const cheekGeo = new THREE.SphereGeometry(0.12, 8);
-    const cheekMat = new THREE.MeshStandardMaterial({ color: 0xffaa88 });
-    
-    const cheekL = new THREE.Mesh(cheekGeo, cheekMat);
-    cheekL.position.set(-0.4, 1.9, 0.4);
-    character.add(cheekL);
-    
-    const cheekR = new THREE.Mesh(cheekGeo, cheekMat);
-    cheekR.position.set(0.4, 1.9, 0.4);
-    character.add(cheekR);
-    
-    // OLHOS - Parte branca
-    const eyeWhiteGeo = new THREE.SphereGeometry(0.15, 12);
-    const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: eyeWhiteColor, emissive: 0x222222 });
-    
-    const eyeWhiteL = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
-    eyeWhiteL.position.set(-0.22, 2.15, 0.45);
-    character.add(eyeWhiteL);
-    
-    const eyeWhiteR = new THREE.Mesh(eyeWhiteGeo, eyeWhiteMat);
-    eyeWhiteR.position.set(0.22, 2.15, 0.45);
-    character.add(eyeWhiteR);
-    
-    // Íris
-    const irisGeo = new THREE.SphereGeometry(0.09, 10);
-    const irisMat = new THREE.MeshStandardMaterial({ color: eyeIrisColor });
-    
-    const irisL = new THREE.Mesh(irisGeo, irisMat);
-    irisL.position.set(-0.22, 2.15, 0.58);
-    character.add(irisL);
-    
-    const irisR = new THREE.Mesh(irisGeo, irisMat);
-    irisR.position.set(0.22, 2.15, 0.58);
-    character.add(irisR);
-    
-    // Pupilas
-    const pupilGeo = new THREE.SphereGeometry(0.05, 6);
-    const pupilMat = new THREE.MeshStandardMaterial({ color: eyePupilColor });
-    
-    const pupilL = new THREE.Mesh(pupilGeo, pupilMat);
-    pupilL.position.set(-0.22, 2.15, 0.64);
-    character.add(pupilL);
-    
-    const pupilR = new THREE.Mesh(pupilGeo, pupilMat);
-    pupilR.position.set(0.22, 2.15, 0.64);
-    character.add(pupilR);
-    
-    // Brilho nos olhos
-    const glintGeo = new THREE.SphereGeometry(0.03, 4);
-    const glintMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x888888 });
-    
-    const glintL = new THREE.Mesh(glintGeo, glintMat);
-    glintL.position.set(-0.18, 2.18, 0.66);
-    character.add(glintL);
-    
-    const glintR = new THREE.Mesh(glintGeo, glintMat);
-    glintR.position.set(0.26, 2.18, 0.66);
-    character.add(glintR);
-    
-    // Nariz
-    const noseGeo = new THREE.ConeGeometry(0.12, 0.15, 6);
-    const noseMat = new THREE.MeshStandardMaterial({ color: skinDarkColor });
-    const nose = new THREE.Mesh(noseGeo, noseMat);
-    nose.position.set(0, 2.02, 0.55);
-    nose.rotation.x = 0.2;
-    nose.castShadow = true;
-    character.add(nose);
-    
-    // Boca (arco)
-    const mouthGeo = new THREE.TorusGeometry(0.12, 0.03, 4, 8, Math.PI);
-    mouthGeo.rotateZ(Math.PI / 2);
-    mouthGeo.rotateX(Math.PI / 4);
-    const mouthMat = new THREE.MeshStandardMaterial({ color: 0xaa5555 });
-    const mouth = new THREE.Mesh(mouthGeo, mouthMat);
-    mouth.position.set(0, 1.94, 0.5);
-    mouth.castShadow = true;
-    character.add(mouth);
-    
-    // Sobrancelhas
-    const browGeo = new THREE.BoxGeometry(0.3, 0.05, 0.1);
-    const browMat = new THREE.MeshStandardMaterial({ color: hairColor });
-    
-    const browL = new THREE.Mesh(browGeo, browMat);
-    browL.position.set(-0.25, 2.28, 0.45);
-    browL.rotation.z = 0.1;
-    browL.castShadow = true;
-    character.add(browL);
-    
-    const browR = new THREE.Mesh(browGeo, browMat);
-    browR.position.set(0.25, 2.28, 0.45);
-    browR.rotation.z = -0.1;
-    browR.castShadow = true;
-    character.add(browR);
-    
-    // CABELO
-    const hairGroup = new THREE.Group();
-    
-    // Topo do cabelo
-    const hairTopGeo = new THREE.SphereGeometry(0.45, 8);
-    const hairTopMat = new THREE.MeshStandardMaterial({ color: hairColor });
-    const hairTop = new THREE.Mesh(hairTopGeo, hairTopMat);
-    hairTop.position.y = 2.3;
-    hairTop.scale.set(1.1, 0.4, 1.1);
-    hairTop.castShadow = true;
-    hairGroup.add(hairTop);
-    
-    // Laterais
-    const hairSideGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.3, 6);
-    
-    const hairSideL = new THREE.Mesh(hairSideGeo, hairTopMat);
-    hairSideL.position.set(-0.45, 2.15, 0);
-    hairSideL.rotation.z = 0.2;
-    hairSideL.castShadow = true;
-    hairGroup.add(hairSideL);
-    
-    const hairSideR = new THREE.Mesh(hairSideGeo, hairTopMat);
-    hairSideR.position.set(0.45, 2.15, 0);
-    hairSideR.rotation.z = -0.2;
-    hairSideR.castShadow = true;
-    hairGroup.add(hairSideR);
-    
-    // Franja
-    const fringeGeo = new THREE.BoxGeometry(0.5, 0.15, 0.2);
-    const fringe = new THREE.Mesh(fringeGeo, hairTopMat);
-    fringe.position.set(0, 2.27, 0.35);
-    fringe.castShadow = true;
-    hairGroup.add(fringe);
-    
-    character.add(hairGroup);
-    
-    // BRAÇOS
-    function createArm(side) {
-      const armGroup = new THREE.Group();
-      
-      const upperArmGeo = new THREE.CylinderGeometry(0.2, 0.18, 0.8, 6);
-      const armMat = new THREE.MeshStandardMaterial({ color: shirtColor, roughness: 0.4 });
-      const upperArm = new THREE.Mesh(upperArmGeo, armMat);
-      upperArm.position.y = -0.3;
-      upperArm.castShadow = true;
-      upperArm.receiveShadow = true;
-      armGroup.add(upperArm);
-      
-      // Mão
-      const handGeo = new THREE.SphereGeometry(0.15, 6);
-      const handMat = new THREE.MeshStandardMaterial({ color: skinColor });
-      const hand = new THREE.Mesh(handGeo, handMat);
-      hand.position.y = -0.75;
-      hand.castShadow = true;
-      hand.receiveShadow = true;
-      armGroup.add(hand);
-      
-      armGroup.position.x = side * 0.7;
-      armGroup.position.y = 1.25;
-      armGroup.rotation.z = side * 0.2;
-      
-      return armGroup;
-    }
-    
-    const leftArm = createArm(-1);
-    character.add(leftArm);
-    
-    const rightArm = createArm(1);
-    character.add(rightArm);
-    
-    // CALÇAS
-    const pantsGeo = new THREE.CylinderGeometry(0.45, 0.4, 0.8, 6);
-    const pantsMat = new THREE.MeshStandardMaterial({ color: pantsColor });
-    const pants = new THREE.Mesh(pantsGeo, pantsMat);
-    pants.position.y = 0.4;
-    pants.castShadow = true;
-    pants.receiveShadow = true;
-    character.add(pants);
-    
-    // PERNAS
-    function createLeg(side) {
-      const legGroup = new THREE.Group();
-      
-      const thighGeo = new THREE.CylinderGeometry(0.22, 0.2, 0.6, 6);
-      const legMat = new THREE.MeshStandardMaterial({ color: pantsColor });
-      const thigh = new THREE.Mesh(thighGeo, legMat);
-      thigh.position.y = -0.2;
-      thigh.castShadow = true;
-      thigh.receiveShadow = true;
-      legGroup.add(thigh);
-      
-      // Pé
-      const footGeo = new THREE.BoxGeometry(0.25, 0.15, 0.4);
-      const footMat = new THREE.MeshStandardMaterial({ color: shoeColor });
-      const foot = new THREE.Mesh(footGeo, footMat);
-      foot.position.set(0, -0.55, 0.1);
-      foot.castShadow = true;
-      foot.receiveShadow = true;
-      legGroup.add(foot);
-      
-      legGroup.position.x = side * 0.25;
-      legGroup.position.y = 0.2;
-      
-      return legGroup;
-    }
-    
-    const leftLeg = createLeg(-1);
-    character.add(leftLeg);
-    
-    const rightLeg = createLeg(1);
-    character.add(rightLeg);
-    
-    // CINTO
-    const beltGeo = new THREE.TorusGeometry(0.45, 0.06, 4, 8);
-    beltGeo.rotateX(Math.PI / 2);
-    const beltMat = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
-    const belt = new THREE.MESH(beltGeo, beltMat);
-    belt.position.y = 0.8;
-    belt.castShadow = true;
-    character.add(belt);
-    
-    // Posicionar personagem
-    character.position.y = 0;
-    character.position.z = 0;
-    character.scale.set(1, 1, 1);
-    
-    scene.add(character);
-    
-    // ============================================
-    // NUVENS FOFAS
-    // ============================================
-    
-    function createCloud(x, y, z, scale) {
-      const cloudGroup = new THREE.Group();
-      
-      const cloudMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x444444, transparent: true, opacity: 0.9 });
-      
-      const base = new THREE.Mesh(new THREE.SphereGeometry(0.8 * scale, 7), cloudMat);
-      base.position.set(0, 0, 0);
-      cloudGroup.add(base);
-      
-      const puff1 = new THREE.Mesh(new THREE.SphereGeometry(0.6 * scale, 6), cloudMat);
-      puff1.position.set(0.7 * scale, 0.2 * scale, 0.2 * scale);
-      cloudGroup.add(puff1);
-      
-      const puff2 = new THREE.Mesh(new THREE.SphereGeometry(0.7 * scale, 6), cloudMat);
-      puff2.position.set(-0.7 * scale, 0.3 * scale, -0.1 * scale);
-      cloudGroup.add(puff2);
-      
-      const puff3 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * scale, 6), cloudMat);
-      puff3.position.set(0.3 * scale, 0.5 * scale, 0.5 * scale);
-      cloudGroup.add(puff3);
-      
-      const puff4 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * scale, 6), cloudMat);
-      puff4.position.set(-0.3 * scale, 0.6 * scale, -0.5 * scale);
-      cloudGroup.add(puff4);
-      
-      cloudGroup.position.set(x, y, z);
-      return cloudGroup;
-    }
-    
-    // Adicionar nuvens no céu
-    scene.add(createCloud(-4, 5, -3, 1.2));
-    scene.add(createCloud(3, 6, -4, 1.5));
-    scene.add(createCloud(5, 4, 4, 1.3));
-    scene.add(createCloud(-3, 7, 5, 1.4));
-    scene.add(createCloud(0, 8, -2, 1.1));
-    
-    // ============================================
-    // ANIMAÇÃO
-    // ============================================
-    
-    let clock = new THREE.Clock();
-    
-    function animate() {
-      requestAnimationFrame(animate);
-      
-      const delta = clock.getDelta();
-      const elapsedTime = performance.now() / 1000;
-      
-      // Animação suave de "respiração" (personagem sobe e desce levemente)
-      character.position.y = Math.sin(elapsedTime * 2) * 0.02;
-      
-      // Animação dos braços (balanço suave)
-      leftArm.rotation.x = Math.sin(elapsedTime * 3) * 0.1;
-      rightArm.rotation.x = Math.sin(elapsedTime * 3 + Math.PI) * 0.1;
-      
-      // Piscar os olhos aleatoriamente
-      if (Math.random() < 0.005) {
-        // Fechar os olhos por um momento
-        irisL.scale.y = 0.1;
-        irisR.scale.y = 0.1;
-        pupilL.scale.y = 0.1;
-        pupilR.scale.y = 0.1;
+            <div style="text-align: center; color: var(--gray); font-size: 14px; margin-top: 20px;">
+                <p>💡 Dica: Clique em "Exportar PNG" para salvar seu avatar com todos os efeitos</p>
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="controls-section">
+            <!-- Upload -->
+            <div class="control-group">
+                <label class="control-label">Imagem Base</label>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">
+                        <strong>Clique para fazer upload</strong>
+                        ou arraste uma imagem aqui
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFile(event)">
+            </div>
+
+            <!-- Shape Style -->
+            <div class="control-group">
+                <label class="control-label">Formato</label>
+                <div class="style-grid">
+                    <button class="style-btn active" onclick="setShape('circle', this)">
+                        <span class="emoji">⭕</span>
+                        <span>Círculo</span>
+                    </button>
+                    <button class="style-btn" onclick="setShape('rounded', this)">
+                        <span class="emoji">▢</span>
+                        <span>Arredondado</span>
+                    </button>
+                    <button class="style-btn" onclick="setShape('square', this)">
+                        <span class="emoji">■</span>
+                        <span>Quadrado</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Border Style -->
+            <div class="control-group">
+                <label class="control-label">Borda</label>
+                <div class="style-grid">
+                    <button class="style-btn active" onclick="setBorder('gradient', this)">
+                        <span class="emoji">🌈</span>
+                        <span>Gradiente</span>
+                    </button>
+                    <button class="style-btn" onclick="setBorder('solid', this)">
+                        <span class="emoji">⚪</span>
+                        <span>Sólida</span>
+                    </button>
+                    <button class="style-btn" onclick="setBorder('none', this)">
+                        <span class="emoji">✖</span>
+                        <span>Sem Borda</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div class="control-group">
+                <label class="control-label">Status</label>
+                <div class="status-options">
+                    <button class="status-btn online active" onclick="setStatus('online', this)">
+                        <span>🟢</span> Online
+                    </button>
+                    <button class="status-btn busy" onclick="setStatus('busy', this)">
+                        <span>🔴</span> Ocupado
+                    </button>
+                    <button class="status-btn away" onclick="setStatus('away', this)">
+                        <span>🟡</span> Ausente
+                    </button>
+                </div>
+                <label style="display: flex; align-items: center; gap: 10px; margin-top: 12px; cursor: pointer;">
+                    <input type="checkbox" id="showStatus" checked onchange="toggleStatus()">
+                    <span style="font-size: 13px; color: var(--gray);">Mostrar indicador de status</span>
+                </label>
+            </div>
+
+            <!-- Level Badge -->
+            <div class="control-group">
+                <label class="control-label">Badge de Nível</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="showLevel" onchange="toggleLevel()">
+                        <span style="font-size: 13px; color: var(--gray);">Mostrar nível</span>
+                    </label>
+                    <input type="number" id="levelInput" value="42" min="1" max="999" 
+                           style="width: 70px; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); 
+                                  background: rgba(255,255,255,0.05); color: white; font-weight: 600; text-align: center;"
+                           onchange="updateLevel()">
+                </div>
+            </div>
+
+            <!-- Effects -->
+            <div class="control-group">
+                <label class="control-label">Efeitos</label>
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span>Sombra</span>
+                        <span id="shadowValue">40px</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="40" oninput="updateShadow(this.value)">
+                </div>
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <span>Brilho</span>
+                        <span id="glowValue">Médio</span>
+                    </div>
+                    <input type="range" min="0" max="100" value="50" oninput="updateGlow(this.value)">
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions">
+                <button class="btn btn-primary" onclick="exportAvatar()">
+                    <span>💾</span> Exportar PNG
+                </button>
+                <button class="btn btn-secondary" onclick="resetAvatar()">
+                    <span>↺</span> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">Avatar exportado com sucesso!</div>
+
+    <script>
+        // State
+        let currentImage = null;
+        let currentShape = 'circle';
+        let currentBorder = 'gradient';
+        let currentStatus = 'online';
+        let shadowSize = 40;
+        let glowIntensity = 50;
+
+        // Canvas setup
+        const canvas = document.getElementById('avatarCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Handle file upload
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    currentImage = img;
+                    document.getElementById('uploadArea').classList.add('has-image');
+                    document.querySelector('.upload-text').innerHTML = '<strong>Imagem carregada!</strong>Clique para trocar';
+                    drawAvatar();
+                    generatePresets();
+                    showToast('Imagem carregada com sucesso!');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Drag and drop
+        const uploadArea = document.getElementById('uploadArea');
         
-        setTimeout(() => {
-          irisL.scale.y = 1;
-          irisR.scale.y = 1;
-          pupilL.scale.y = 1;
-          pupilR.scale.y = 1;
-        }, 150);
-      }
-      
-      // Atualizar controles
-      controls.update();
-      
-      renderer.render(scene, camera);
-    }
-    
-    animate();
-    
-    // ============================================
-    // AJUSTE DE TELA
-    // ============================================
-    
-    window.addEventListener('resize', onWindowResize, false);
-    
-    function onWindowResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-    
-    // Pequeno ajuste na posição inicial da câmera
-    camera.position.set(4, 2.5, 5);
-    controls.target.set(0, 1.2, 0);
-  </script>
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        document.getElementById('uploadArea').classList.add('has-image');
+                        drawAvatar();
+                        generatePresets();
+                        showToast('Imagem carregada com sucesso!');
+                    };
+                    img.src = evt.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Draw avatar on canvas
+        function drawAvatar() {
+            if (!currentImage) {
+                // Draw placeholder
+                const gradient = ctx.createLinearGradient(0, 0, 300, 300);
+                gradient.addColorStop(0, '#6366f1');
+                gradient.addColorStop(1, '#ec4899');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 300, 300);
+                
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.font = '60px Inter';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('👤', 150, 150);
+                return;
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, 300, 300);
+
+            // Create clipping path based on shape
+            ctx.save();
+            createClipPath();
+            
+            // Draw image
+            ctx.drawImage(currentImage, 0, 0, 300, 300);
+            ctx.restore();
+
+            // Apply border
+            if (currentBorder !== 'none') {
+                drawBorder();
+            }
+
+            // Apply glow effect
+            if (glowIntensity > 0) {
+                applyGlow();
+            }
+        }
+
+        function createClipPath() {
+            ctx.beginPath();
+            if (currentShape === 'circle') {
+                ctx.arc(150, 150, 150, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                roundRect(ctx, 0, 0, 300, 300, 60);
+            } else {
+                ctx.rect(0, 0, 300, 300);
+            }
+            ctx.closePath();
+            ctx.clip();
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+        }
+
+        function drawBorder() {
+            ctx.save();
+            ctx.beginPath();
+            if (currentShape === 'circle') {
+                ctx.arc(150, 150, 145, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                roundRect(ctx, 5, 5, 290, 290, 55);
+            } else {
+                ctx.rect(5, 5, 290, 290);
+            }
+            ctx.closePath();
+            
+            ctx.lineWidth = 10;
+            if (currentBorder === 'gradient') {
+                const gradient = ctx.createLinearGradient(0, 0, 300, 300);
+                gradient.addColorStop(0, '#6366f1');
+                gradient.addColorStop(0.5, '#ec4899');
+                gradient.addColorStop(1, '#6366f1');
+                ctx.strokeStyle = gradient;
+            } else {
+                ctx.strokeStyle = '#ffffff';
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function applyGlow() {
+            const intensity = glowIntensity / 100;
+            ctx.save();
+            ctx.shadowColor = `rgba(99, 102, 241, ${intensity})`;
+            ctx.shadowBlur = 30 * intensity;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+            
+            ctx.beginPath();
+            if (currentShape === 'circle') {
+                ctx.arc(150, 150, 150, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                roundRect(ctx, 0, 0, 300, 300, 60);
+            } else {
+                ctx.rect(0, 0, 300, 300);
+            }
+            ctx.closePath();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // Control functions
+        function setShape(shape, btn) {
+            currentShape = shape;
+            document.querySelectorAll('.style-btn').forEach(b => {
+                if (b.parentElement === btn.parentElement) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            drawAvatar();
+        }
+
+        function setBorder(border, btn) {
+            currentBorder = border;
+            document.querySelectorAll('.style-btn').forEach(b => {
+                if (b.parentElement === btn.parentElement) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            drawAvatar();
+        }
+
+        function setStatus(status, btn) {
+            currentStatus = status;
+            document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateStatusBadge();
+        }
+
+        function toggleStatus() {
+            const show = document.getElementById('showStatus').checked;
+            document.getElementById('statusBadge').style.display = show ? 'flex' : 'none';
+        }
+
+        function updateStatusBadge() {
+            const badge = document.getElementById('statusBadge');
+            badge.className = 'status-badge status-' + currentStatus;
+            
+            const icons = {
+                online: '●',
+                busy: '🛑',
+                away: '◐'
+            };
+            document.getElementById('statusIcon').textContent = icons[currentStatus];
+        }
+
+        function toggleLevel() {
+            const show = document.getElementById('showLevel').checked;
+            document.getElementById('levelBadge').style.display = show ? 'flex' : 'none';
+        }
+
+        function updateLevel() {
+            const level = document.getElementById('levelInput').value;
+            document.getElementById('levelNum').textContent = level;
+        }
+
+        function updateShadow(value) {
+            shadowSize = value;
+            document.getElementById('shadowValue').textContent = value + 'px';
+            canvas.style.boxShadow = `0 ${value/2}px ${value}px -${value/4}px rgba(99, 102, 241, 0.4)`;
+        }
+
+        function updateGlow(value) {
+            glowIntensity = value;
+            document.getElementById('glowValue').textContent = value > 70 ? 'Alto' : value > 30 ? 'Médio' : 'Baixo';
+            drawAvatar();
+        }
+
+        // Generate preset variations
+        function generatePresets() {
+            const presets = document.getElementById('presets');
+            presets.style.display = 'flex';
+            presets.innerHTML = '';
+            
+            const variations = [
+                { shape: 'circle', border: 'gradient', filter: 'none' },
+                { shape: 'circle', border: 'solid', filter: 'grayscale' },
+                { shape: 'rounded', border: 'gradient', filter: 'sepia' },
+                { shape: 'circle', border: 'none', filter: 'contrast' }
+            ];
+            
+            variations.forEach((var, idx) => {
+                const preset = document.createElement('div');
+                preset.className = 'preset';
+                preset.onclick = () => applyPreset(var);
+                
+                const img = document.createElement('canvas');
+                img.width = 50;
+                img.height = 50;
+                const pctx = img.getContext('2d');
+                
+                // Draw mini version
+                pctx.save();
+                pctx.beginPath();
+                pctx.arc(25, 25, 25, 0, Math.PI * 2);
+                pctx.clip();
+                pctx.drawImage(currentImage, 0, 0, 50, 50);
+                pctx.restore();
+                
+                preset.appendChild(img);
+                presets.appendChild(preset);
+            });
+        }
+
+        function applyPreset(preset) {
+            currentShape = preset.shape;
+            currentBorder = preset.border;
+            drawAvatar();
+            showToast('Preset aplicado!');
+        }
+
+        // Export functions
+        function exportAvatar() {
+            if (!currentImage) {
+                showToast('Faça upload de uma imagem primeiro!');
+                return;
+            }
+
+            // Create export canvas with all elements
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = 400;
+            exportCanvas.height = 400;
+            const ectx = exportCanvas.getContext('2d');
+
+            // Background
+            ectx.fillStyle = 'transparent';
+            ectx.clearRect(0, 0, 400, 400);
+
+            // Shadow
+            ectx.save();
+            ectx.shadowColor = 'rgba(99, 102, 241, 0.4)';
+            ectx.shadowBlur = shadowSize;
+            ectx.shadowOffsetX = 0;
+            ectx.shadowOffsetY = shadowSize / 2;
+
+            // Main avatar
+            const offset = 50;
+            ectx.save();
+            ectx.beginPath();
+            if (currentShape === 'circle') {
+                ectx.arc(200, 200, 150, 0, Math.PI * 2);
+            } else if (currentShape === 'rounded') {
+                roundRect(ectx, offset, offset, 300, 300, 60);
+            } else {
+                ectx.rect(offset, offset, 300, 300);
+            }
+            ectx.closePath();
+            ectx.clip();
+            ectx.drawImage(canvas, 0, 0, 300, 300, offset, offset, 300, 300);
+            ectx.restore();
+
+            // Border on export
+            if (currentBorder !== 'none') {
+                ectx.beginPath();
+                if (currentShape === 'circle') {
+                    ectx.arc(200, 200, 145, 0, Math.PI * 2);
+                } else if (currentShape === 'rounded') {
+                    roundRect(ectx, offset + 5, offset + 5, 290, 290, 55);
+                } else {
+                    ectx.rect(offset + 5, offset + 5, 290, 290);
+                }
+                ectx.closePath();
+                ectx.lineWidth = 10;
+                if (currentBorder === 'gradient') {
+                    const gradient = ectx.createLinearGradient(0, 0, 400, 400);
+                    gradient.addColorStop(0, '#6366f1');
+                    gradient.addColorStop(0.5, '#ec4899');
+                    gradient.addColorStop(1, '#6366f1');
+                    ectx.strokeStyle = gradient;
+                } else {
+                    ectx.strokeStyle = '#ffffff';
+                }
+                ectx.stroke();
+            }
+            ectx.restore();
+
+            // Level badge
+            if (document.getElementById('showLevel').checked) {
+                const level = document.getElementById('levelInput').value;
+                ectx.save();
+                ectx.beginPath();
+                ectx.arc(340, 60, 40, 0, Math.PI * 2);
+                ectx.fillStyle = '#f59e0b';
+                ectx.fill();
+                ectx.lineWidth = 6;
+                ectx.strokeStyle = '#0f172a';
+                ectx.stroke();
+                
+                ectx.fillStyle = '#0f172a';
+                ectx.font = 'bold 12px Inter';
+                ectx.textAlign = 'center';
+                ectx.fillText('LVL', 340, 50);
+                ectx.font = 'bold 24px Inter';
+                ectx.fillText(level, 340, 75);
+                ectx.restore();
+            }
+
+            // Status badge
+            if (document.getElementById('showStatus').checked) {
+                const colors = {
+                    online: '#10b981',
+                    busy: '#ef4444',
+                    away: '#f59e0b'
+                };
+                const icons = {
+                    online: '●',
+                    busy: '✕',
+                    away: '−'
+                };
+                
+                ectx.save();
+                ectx.beginPath();
+                ectx.arc(340, 340, 25, 0, Math.PI * 2);
+                ectx.fillStyle = colors[currentStatus];
+                ectx.fill();
+                ectx.lineWidth = 4;
+                ectx.strokeStyle = '#0f172a';
+                ectx.stroke();
+                
+                ectx.fillStyle = '#ffffff';
+                ectx.font = 'bold 16px Inter';
+                ectx.textAlign = 'center';
+                ectx.textBaseline = 'middle';
+                ectx.fillText(icons[currentStatus], 340, 340);
+                ectx.restore();
+            }
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `avatar-${Date.now()}.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+            
+            showToast('Avatar exportado com sucesso!');
+        }
+
+        function resetAvatar() {
+            currentImage = null;
+            currentShape = 'circle';
+            currentBorder = 'gradient';
+            currentStatus = 'online';
+            shadowSize = 40;
+            glowIntensity = 50;
+            
+            document.getElementById('uploadArea').classList.remove('has-image');
+            document.querySelector('.upload-text').innerHTML = '<strong>Clique para fazer upload</strong>ou arraste uma imagem aqui';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('presets').style.display = 'none';
+            
+            // Reset controls
+            document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.style-btn')[0].classList.add('active');
+            document.querySelectorAll('.status-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.status-btn.online').classList.add('active');
+            
+            canvas.style.boxShadow = '0 25px 50px -12px rgba(99, 102, 241, 0.4)';
+            document.getElementById('shadowValue').textContent = '40px';
+            document.querySelector('input[type="range"]').value = 40;
+            
+            drawAvatar();
+            showToast('Reset concluído!');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Initialize
+        drawAvatar();
+        updateStatusBadge();
+    </script>
 </body>
 </html>
